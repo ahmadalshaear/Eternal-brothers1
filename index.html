@@ -68,20 +68,40 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 .delete-msg-btn { background: transparent !important; border: none; color: #ffeb3b; cursor: pointer; font-size: 16px; margin-left: 8px; padding: 0 5px; line-height: 1; font-weight: bold; }
 .delete-msg-btn:hover { color: #fff; background-color: rgba(0,0,0,0.2) !important; border-radius: 50%; }
 
-/* Custom Audio Player Style */
-.chat-audio-player {
+/* ---- CUSTOM AUDIO PLAYER STYLES ---- */
+.custom-audio-player {
+    display: flex;
+    align-items: center;
+    background-color: #f5f5f5; /* White/Light Gray background like the image */
+    border-radius: 12px;
+    padding: 8px 15px;
     width: 100%;
-    min-width: 250px; /* Force width to be wide like a music player */
-    height: 45px;
+    min-width: 240px;
     margin-top: 8px;
-    border-radius: 25px;
-    outline: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-sizing: border-box;
 }
-/* Force dark background for audio player controls on webkit */
-audio::-webkit-media-controls-panel {
-    background-color: #f0f0f0;
+.audio-play-btn {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 20px;
+    cursor: pointer;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
 }
+.audio-time-display {
+    color: #333;
+    font-size: 14px;
+    font-family: monospace;
+    font-weight: bold;
+    flex-grow: 1;
+    text-align: left; /* Or center */
+}
+/* ------------------------------------ */
 
 .chat-input-area { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; position: relative; }
 .chat-row-inputs { display: flex; gap: 5px; width: 100%; }
@@ -1002,16 +1022,81 @@ async function finishVoiceRecording(context, action) {
     isRecording = false;
 }
 
-// RENDER MESSAGES
+// ---- CUSTOM AUDIO PLAYER LOGIC ----
+function toggleCustomAudio(uniqueId) {
+    const audio = document.getElementById(uniqueId);
+    const btn = document.getElementById('btn-' + uniqueId);
+    
+    // Pause all other audios
+    document.querySelectorAll('audio').forEach(a => {
+        if (a.id !== uniqueId && !a.paused) {
+            a.pause();
+            // Reset their buttons if they are custom players
+            if (a.id && a.id.startsWith('audio-')) {
+                const otherBtn = document.getElementById('btn-' + a.id);
+                if (otherBtn) otherBtn.innerText = '▶';
+            }
+        }
+    });
+
+    if (audio.paused) {
+        audio.play();
+        btn.innerText = '⏸';
+    } else {
+        audio.pause();
+        btn.innerText = '▶';
+    }
+}
+
+function updateAudioTime(uniqueId) {
+    const audio = document.getElementById(uniqueId);
+    const timeDisplay = document.getElementById('time-' + uniqueId);
+    if (!audio || !timeDisplay) return;
+
+    const current = formatTime(audio.currentTime);
+    const duration = formatTime(audio.duration || 0);
+    
+    timeDisplay.innerText = `${current} / ${duration}`;
+}
+
+function resetAudio(uniqueId) {
+    const btn = document.getElementById('btn-' + uniqueId);
+    if (btn) btn.innerText = '▶';
+}
+
+function formatTime(seconds) {
+    if (isNaN(seconds)) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+// -----------------------------------
+
+// RENDER MESSAGES (UPDATED WITH CUSTOM AUDIO)
 function renderMessage(m, id) {
     const div = document.getElementById(id); const isMe = m.username === localStorage.getItem('chat_username');
     let c = m.content;
-    if (c.startsWith('[IMG]')) c = `<img src="${c.substring(5)}" class="chat-media-content" onclick="window.open(this.src)">`;
-    else if (c.startsWith('[VID]')) c = `<video src="${c.substring(5)}" controls class="chat-media-content"></video>`;
-    else if (c.startsWith('[AUDIO]')) c = `<div style="width:100%; min-width:250px;"><audio src="${c.substring(7)}" controls class="chat-audio-player"></audio></div>`;
+    
+    if (c.startsWith('[IMG]')) {
+        c = `<img src="${c.substring(5)}" class="chat-media-content" onclick="window.open(this.src)">`;
+    } else if (c.startsWith('[VID]')) {
+        c = `<video src="${c.substring(5)}" controls class="chat-media-content"></video>`;
+    } else if (c.startsWith('[AUDIO]')) {
+        // Generate a unique ID for this specific audio message
+        const uniqueId = 'audio-' + Math.random().toString(36).substr(2, 9);
+        const src = c.substring(7);
+        
+        c = `
+        <div class="custom-audio-player">
+            <button id="btn-${uniqueId}" class="audio-play-btn" onclick="toggleCustomAudio('${uniqueId}')">▶</button>
+            <span id="time-${uniqueId}" class="audio-time-display">0:00 / 0:00</span>
+            <audio id="${uniqueId}" src="${src}" ontimeupdate="updateAudioTime('${uniqueId}')" onloadedmetadata="updateAudioTime('${uniqueId}')" onended="resetAudio('${uniqueId}')" style="display:none;"></audio>
+        </div>`;
+    }
     
     let delBtn = '';
     const table = id.includes('blue') ? 'blue_chat' : (id.includes('yellow') ? 'yellow_chat' : 'chat_messages');
+    // Use '✕' instead of trash can
     if (isMe) delBtn = `<button class="delete-msg-btn" title="Delete" onclick="deleteSingleMessage('${table}', ${m.id})">✕</button>`;
 
     const timeSpan = new Date(m.created_at).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
@@ -1023,6 +1108,7 @@ function renderMessage(m, id) {
     </div>`;
     div.scrollTop = div.scrollHeight;
 }
+
 async function deleteSingleMessage(table, id) {
     if(!confirm("Delete?")) return;
     await supabase.from(table).delete().eq('id', id);
