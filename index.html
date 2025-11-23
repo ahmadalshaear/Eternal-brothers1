@@ -42,14 +42,13 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 .edit-btn { background:#4caf50; color:#fff; }
 .delete-btn { background:#e53935; color:#fff; }
 
-/* -------------------- 4. FIELD & MARKER STYLES (MERGED) -------------------- */
+/* -------------------- 4. FIELD & MARKER STYLES -------------------- */
 .field { width:100%; max-width:400px; height:250px; background:#4CAF50; margin:10px auto; border:2px solid #fff; border-radius:10px; position:relative; touch-action:none; }
 .field .center-circle { position:absolute; width:50px;height:50px;border-radius:50%;border:2px solid #fff; top:50%; left:50%; transform:translate(-50%,-50%); }
 .field .penalty-box-left, .field .penalty-box-right { position:absolute;width:60px;height:120px;border:2px solid #fff; top:50%; transform:translateY(-50%); }
 .field .penalty-box-left { left:0; } .field .penalty-box-right { right:0; }
 .field .mid-line { position:absolute; width:0;height:100%;border-left:2px solid #fff; top:0; left:50%; transform:translateX(-50%); }
 
-/* Updated Marker Styles from New Code */
 .player-marker { width:35px; height:35px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; position:absolute; cursor:pointer; user-select:none; border: 2px solid rgba(255, 255, 255, 0.5); touch-action: none; transform: translate(-50%, -50%); z-index: 10; }
 .player-name { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 12px; color: black; white-space: nowrap; font-weight: bold; text-shadow: 0 0 2px rgba(0,0,0,0.5); }
 .player-position-label { font-size: 13px; font-weight: bold; color: white; }
@@ -57,19 +56,16 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 /* -------------------- 5. CHAT STYLES -------------------- */
 .chat-container { width: 100%; max-width: 100%; margin: 20px 0 0 0; background: #242424; border-radius: 10px; padding: 10px; box-shadow: 0 0 5px #000; text-align: left; }
 .team-chat-container { background: none; box-shadow: none; margin: 5px 0 0 0; padding: 0; }
-/* Online Users & Typing */
 #onlineUsersBar { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px; margin-bottom: 5px; background: #1a1a1a; border-radius: 8px; min-height: 20px; }
 .online-user-pill { background: #333; border-radius: 15px; padding: 2px 8px; font-size: 11px; display: flex; align-items: center; color: #ccc; border: 1px solid #444; }
 .online-dot { width: 8px; height: 8px; background-color: #00e676; border-radius: 50%; margin-left: 5px; box-shadow: 0 0 5px #00e676; animation: blink 2s infinite; }
 @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
 #typingIndicator { font-size: 11px; color: #00e676; height: 15px; margin-bottom: 2px; font-style: italic; padding-left: 5px; }
-
 .chat-messages { height: 250px; overflow-y: auto; margin-bottom: 5px; padding: 5px; background: #1e1e1e; border-radius: 5px; display: flex; flex-direction: column; text-align: left; }
 #blueChatMessages { background: rgba(25, 118, 210, 0.1); } #yellowChatMessages { background: rgba(251, 192, 42, 0.1); }
-
 .message { margin-bottom: 8px; padding: 8px; border-radius: 10px; background: #333; word-wrap: break-word; max-width: 90%; align-self: flex-start; font-size: 14px; line-height: 1.4; text-align: left; border: 1px solid transparent; color: #e0e0e0; position: relative; }
 .my-message { background: #d32f2f; color: #fff; align-self: flex-end; text-align: left; border: 1px solid #d32f2f; }
-.delete-msg-btn { background: transparent !important; border: none; color: #ffeb3b; cursor: pointer; font-size: 14px; margin-left: 8px; padding: 0 5px; line-height: 1; }
+.delete-msg-btn { background: transparent !important; border: none; color: #ffeb3b; cursor: pointer; font-size: 16px; margin-left: 8px; padding: 0 5px; line-height: 1; font-weight: bold; }
 .delete-msg-btn:hover { color: #fff; background-color: rgba(0,0,0,0.2) !important; border-radius: 50%; }
 
 .chat-input-area { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; position: relative; }
@@ -87,8 +83,44 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 .team-add-custom { background: #009688 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; font-size: 10px; font-weight: bold; padding: 3px 6px; min-width: 35px; }
 .team-dots { display: flex; gap: 3px; margin-top: 2px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid #fff; } .dot-b { background: #2196F3; } .dot-y { background: #FFEB3B; }
-.record-btn.recording { background: #d32f2f !important; animation: pulse 1.5s infinite; }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); } }
+
+/* RECORDING UI STYLES */
+.recording-overlay {
+    display: none;
+    width: 100%;
+    height: 50px;
+    background: #2c2c2c;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    box-sizing: border-box;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+}
+.recording-text {
+    color: #ff1744;
+    font-weight: bold;
+    font-size: 16px;
+    flex-grow: 1;
+    text-align: center;
+    animation: pulseText 1.5s infinite;
+}
+@keyframes pulseText { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
+
+.rec-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 5px 10px;
+}
+.rec-send-btn { color: #FFD700; font-size: 24px; } /* Gold Arrow */
+.rec-trash-btn { color: #ccc; font-size: 22px; } /* Trash */
+.rec-trash-btn:hover { color: #ff1744; }
 
 .chat-media-content { max-width: 100%; border-radius: 8px; margin-top: 5px; display: block; border: 1px solid #555; }
 .chat-sticker { width: 100px; height: auto; display: block; margin-top: 5px; }
@@ -181,7 +213,6 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
   <ul id="waitingList"></ul>
   
   <button onclick="loadSystemHistory()" style="background:#6a1b9a; color:#fff; margin-top:15px; width:80%;">Show Join/Leave History</button>
-  
   <div id="systemHistoryContainer" style="margin-top:10px; padding:10px; background:#2c2c2c; border-radius:8px; max-width: 400px; margin-left: auto; margin-right: auto; text-align:left; display:none;">
       <h3 style="margin-top:0;">Event History</h3>
       <ul id="historyList" style="text-align:left; font-weight:normal; font-size:14px; color:#ccc;"></ul>
@@ -192,6 +223,12 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
     <div id="chatMessages" class="chat-messages"></div>
     
     <div class="chat-input-area">
+        <div id="recordingBar_global" class="recording-overlay">
+            <button class="rec-action-btn rec-send-btn" onclick="finishVoiceRecording('global', 'send')">➤</button>
+            <span class="recording-text">Recording...</span>
+            <button class="rec-action-btn rec-trash-btn" onclick="finishVoiceRecording('global', 'cancel')">🗑️</button>
+        </div>
+
         <div class="chat-row-inputs">
             <input type="text" id="chatNameInput" placeholder="Name" value="">
             <input type="text" id="chatMsgInput" placeholder="Type a message...">
@@ -200,7 +237,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
         <div class="chat-row-tools">
             <input type="file" id="globalChatFile" accept="image/*,video/*" style="display:none" onchange="handleFileUpload(this, 'global')">
             <button class="tool-btn" onclick="document.getElementById('globalChatFile').click()" title="Upload">📷</button>
-            <button id="recordBtnGlobal" class="tool-btn record-btn" style="margin-left:5px;" onmousedown="startVoiceRecording('global')" onmouseup="stopVoiceRecording('global')" ontouchstart="startVoiceRecording('global')" ontouchend="stopVoiceRecording('global')" title="Record">🎤</button>
+            <button id="recordBtnGlobal" class="tool-btn record-btn" style="margin-left:5px;" onclick="startVoiceRecording('global')" title="Record">🎤</button>
             <button class="tool-btn sticker-btn" style="margin-left:5px;" onclick="toggleStickerMenu('global')" title="Stickers">☺</button>
             <button class="tool-btn team-add-custom" style="margin-left:5px;" onclick="openTeamAddModal()" title="Add to Team"><span>Add</span><div class="team-dots"><span class="dot dot-b"></span><span class="dot dot-y"></span></div></button>
             <button class="tool-btn radio-btn" style="margin-left:5px;" onclick="toggleRadio()" title="Radio">📻</button>
@@ -213,8 +250,11 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
                     <option value="https://server7.mp3quran.net/basit/001.mp3">Abdulbasit Abdulsamad</option>
                     <option value="https://server11.mp3quran.net/sds/001.mp3">Abdulrahman Al-Sudais</option>
                 </optgroup>
-                <optgroup label="News/Music">
+                <optgroup label="News/Info">
                     <option value="https://live-hls-audio-web-aje.getaj.net/AJE/01.m3u8">Al Jazeera English</option>
+                    <option value="https://live-hls-audio-web-aja.getaj.net/AJA/01.m3u8">Al Jazeera Arabic</option>
+                </optgroup>
+                <optgroup label="Entertainment">
                     <option value="https://l3.itworkscdn.net/itwaudio/9026/stream">Rotana FM</option>
                 </optgroup>
             </select>
@@ -229,6 +269,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
                 <button class="sticker-tab active" onclick="showStickerTab('global', 'football')">Football</button>
                 <button class="sticker-tab" onclick="showStickerTab('global', 'funny')">Funny</button>
                 <button class="sticker-tab" onclick="showStickerTab('global', 'action')">Action</button>
+                <button class="sticker-tab" onclick="toggleStickerMenu('global')" style="color: #f44336; font-weight: bold;">✕</button>
             </div>
             <div id="stickerGridGlobal" class="sticker-grid"></div>
         </div>
@@ -260,6 +301,12 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
     <h3>Blue Team Chat 🗩</h3>
     <div id="blueChatMessages" class="chat-messages"></div>
     <div class="chat-input-area">
+        <div id="recordingBar_blue" class="recording-overlay">
+            <button class="rec-action-btn rec-send-btn" onclick="finishVoiceRecording('blue', 'send')">➤</button>
+            <span class="recording-text">Recording...</span>
+            <button class="rec-action-btn rec-trash-btn" onclick="finishVoiceRecording('blue', 'cancel')">🗑️</button>
+        </div>
+
         <div class="chat-row-inputs">
             <input type="text" id="blueChatNameInput" placeholder="Name" value="">
             <input type="text" id="blueChatMsgInput" placeholder="Message...">
@@ -268,7 +315,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
         <div class="chat-row-tools">
             <input type="file" id="blueChatFile" accept="image/*,video/*" style="display:none" onchange="handleFileUpload(this, 'blue')">
             <button class="tool-btn" onclick="document.getElementById('blueChatFile').click()">📷</button>
-            <button id="recordBtnBlue" class="tool-btn record-btn" style="margin-left:5px;" onmousedown="startVoiceRecording('blue')" onmouseup="stopVoiceRecording('blue')" ontouchstart="startVoiceRecording('blue')" ontouchend="stopVoiceRecording('blue')">🎤</button>
+            <button id="recordBtnBlue" class="tool-btn record-btn" style="margin-left:5px;" onmousedown="startVoiceRecording('blue')">🎤</button>
             <button class="tool-btn sticker-btn" style="margin-left:5px;" onclick="toggleStickerMenu('blue')">☺</button>
         </div>
         <div id="stickerPopupBlue" class="sticker-popup">
@@ -276,6 +323,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
                 <button class="sticker-tab active" onclick="showStickerTab('blue', 'football')">Football</button>
                 <button class="sticker-tab" onclick="showStickerTab('blue', 'funny')">Funny</button>
                 <button class="sticker-tab" onclick="showStickerTab('blue', 'action')">Action</button>
+                <button class="sticker-tab" onclick="toggleStickerMenu('blue')" style="color: #f44336; font-weight: bold;">✕</button>
             </div>
             <div id="stickerGridBlue" class="sticker-grid"></div>
         </div>
@@ -307,6 +355,12 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
     <h3 style="color: #000;">Yellow Team Chat 🗩</h3>
     <div id="yellowChatMessages" class="chat-messages"></div>
     <div class="chat-input-area">
+        <div id="recordingBar_yellow" class="recording-overlay">
+            <button class="rec-action-btn rec-send-btn" onclick="finishVoiceRecording('yellow', 'send')">➤</button>
+            <span class="recording-text">Recording...</span>
+            <button class="rec-action-btn rec-trash-btn" onclick="finishVoiceRecording('yellow', 'cancel')">🗑️</button>
+        </div>
+
         <div class="chat-row-inputs">
             <input type="text" id="yellowChatNameInput" placeholder="Name" value="">
             <input type="text" id="yellowChatMsgInput" placeholder="Message...">
@@ -315,7 +369,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
         <div class="chat-row-tools">
             <input type="file" id="yellowChatFile" accept="image/*,video/*" style="display:none" onchange="handleFileUpload(this, 'yellow')">
             <button class="tool-btn" onclick="document.getElementById('yellowChatFile').click()">📷</button>
-            <button id="recordBtnYellow" class="tool-btn record-btn" style="margin-left:5px;" onmousedown="startVoiceRecording('yellow')" onmouseup="stopVoiceRecording('yellow')" ontouchstart="startVoiceRecording('yellow')" ontouchend="stopVoiceRecording('yellow')">🎤</button>
+            <button id="recordBtnYellow" class="tool-btn record-btn" style="margin-left:5px;" onmousedown="startVoiceRecording('yellow')">🎤</button>
             <button class="tool-btn sticker-btn" style="margin-left:5px;" onclick="toggleStickerMenu('yellow')">☺</button>
         </div>
         <div id="stickerPopupYellow" class="sticker-popup">
@@ -323,6 +377,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
                 <button class="sticker-tab active" onclick="showStickerTab('yellow', 'football')">Football</button>
                 <button class="sticker-tab" onclick="showStickerTab('yellow', 'funny')">Funny</button>
                 <button class="sticker-tab" onclick="showStickerTab('yellow', 'action')">Action</button>
+                <button class="sticker-tab" onclick="toggleStickerMenu('yellow')" style="color: #f44336; font-weight: bold;">✕</button>
             </div>
             <div id="stickerGridYellow" class="sticker-grid"></div>
         </div>
@@ -643,7 +698,6 @@ async function addTeam(team, inputId, providedName){
   if(curr.length >= 12) return alert("Team Full");
   let pin = null;
   if (curr.length === 0) { pin = prompt(`Captain (${name}) Create PIN:`); if (!pin) return; }
-  // Default new players to SUB (off-field top) if formation full
   const pos = FORMATIONS['4-3-3'][curr.length] || { left: '50%', top: '-15%', code: 'SUB' };
   await supabase.from(table).insert([{ name, time: Date.now(), position: JSON.stringify({left:pos.left, top:pos.top}), position_code: pos.code, player_pin: pin }]);
   if(!providedName) document.getElementById(inputId).value="";
@@ -852,7 +906,10 @@ async function handleFileUpload(input, context) {
 // --- NEW FEATURES LOGIC ---
 function toggleRadio() { const e=document.getElementById('radioPlayerSection'); e.style.display = e.style.display==='block'?'none':'block'; }
 function playRadio() { const a=document.getElementById('radioStreamPlayer'); const s=document.getElementById('radioSelect'); if(a.src!==s.value) a.src=s.value; a.play(); }
-function stopRadio() { document.getElementById('radioStreamPlayer').pause(); }
+function stopRadio() { 
+    document.getElementById('radioStreamPlayer').pause(); 
+    document.getElementById('radioPlayerSection').style.display='none';
+}
 function changeRadioChannel() { playRadio(); document.getElementById('radioPlayerSection').style.display='none'; }
 
 function toggleStickerMenu(context) {
@@ -881,36 +938,53 @@ async function sendSticker(context, url) {
     toggleStickerMenu(context);
 }
 
+// --- NEW RECORDING LOGIC (Bar Style) ---
 async function startVoiceRecording(context) {
     if (!navigator.mediaDevices) return alert("Microphone not supported");
+    const nameInputId = context === 'global' ? 'chatNameInput' : (context==='blue'?'blueChatNameInput':'yellowChatNameInput');
+    if (!document.getElementById(nameInputId).value.trim()) return alert("Enter name first");
+
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
+        
+        // Show the specific recording bar
+        const barId = context === 'global' ? 'recordingBar_global' : (context === 'blue' ? 'recordingBar_blue' : 'recordingBar_yellow');
+        document.getElementById(barId).style.display = 'flex';
+        
+        isRecording = true;
+        mediaRecorder.start();
+    } catch (e) { console.error(e); alert("Mic access denied"); }
+}
+
+async function finishVoiceRecording(context, action) {
+    if (!mediaRecorder || !isRecording) return;
+    
+    const barId = context === 'global' ? 'recordingBar_global' : (context === 'blue' ? 'recordingBar_blue' : 'recordingBar_yellow');
+    
+    mediaRecorder.onstop = async () => {
+        document.getElementById(barId).style.display = 'none'; // Hide bar
+        if (action === 'send') {
              const blob = new Blob(audioChunks, { type: 'audio/webm' });
              const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
              const nameInputId = context === 'global' ? 'chatNameInput' : (context==='blue'?'blueChatNameInput':'yellowChatNameInput');
              const name = document.getElementById(nameInputId).value.trim();
-             if(!name) return alert("Enter name");
+             
              const fileName = `${Date.now()}.webm`;
              const { error } = await supabase.storage.from('chat_images').upload(fileName, file);
              if(error) return alert("Audio upload failed");
              const { data } = supabase.storage.from('chat_images').getPublicUrl(fileName);
              const table = context === 'global' ? 'chat_messages' : `${context}_chat`;
              await supabase.from(table).insert([{ username: name, content: `[AUDIO]${data.publicUrl}` }]);
-        };
-        mediaRecorder.start();
-        isRecording = true;
-        document.getElementById(context==='global'?'recordBtnGlobal':(context==='blue'?'recordBtnBlue':'recordBtnYellow')).classList.add('recording');
-    } catch (e) { console.error(e); alert("Mic access denied"); }
-}
-function stopVoiceRecording(context) {
-    if(mediaRecorder && isRecording) {
-        mediaRecorder.stop(); isRecording = false;
-        document.getElementById(context==='global'?'recordBtnGlobal':(context==='blue'?'recordBtnBlue':'recordBtnYellow')).classList.remove('recording');
-    }
+        }
+        // clear tracks
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    };
+    
+    mediaRecorder.stop();
+    isRecording = false;
 }
 
 // RENDER MESSAGES
@@ -923,7 +997,7 @@ function renderMessage(m, id) {
     
     let delBtn = '';
     const table = id.includes('blue') ? 'blue_chat' : (id.includes('yellow') ? 'yellow_chat' : 'chat_messages');
-    if (isMe) delBtn = `<button class="delete-msg-btn" onclick="deleteSingleMessage('${table}', ${m.id})">🗑️</button>`;
+    if (isMe) delBtn = `<button class="delete-msg-btn" title="Delete" onclick="deleteSingleMessage('${table}', ${m.id})">✕</button>`;
 
     const timeSpan = new Date(m.created_at).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
 
