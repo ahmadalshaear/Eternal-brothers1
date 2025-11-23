@@ -68,6 +68,21 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 .delete-msg-btn { background: transparent !important; border: none; color: #ffeb3b; cursor: pointer; font-size: 16px; margin-left: 8px; padding: 0 5px; line-height: 1; font-weight: bold; }
 .delete-msg-btn:hover { color: #fff; background-color: rgba(0,0,0,0.2) !important; border-radius: 50%; }
 
+/* Custom Audio Player Style */
+.chat-audio-player {
+    width: 100%;
+    min-width: 250px; /* Force width to be wide like a music player */
+    height: 45px;
+    margin-top: 8px;
+    border-radius: 25px;
+    outline: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+/* Force dark background for audio player controls on webkit */
+audio::-webkit-media-controls-panel {
+    background-color: #f0f0f0;
+}
+
 .chat-input-area { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; position: relative; }
 .chat-row-inputs { display: flex; gap: 5px; width: 100%; }
 .chat-row-tools { display: flex; gap: 5px; justify-content: flex-start; align-items: center; width: 100%; padding: 2px 0; }
@@ -237,7 +252,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
         <div class="chat-row-tools">
             <input type="file" id="globalChatFile" accept="image/*,video/*" style="display:none" onchange="handleFileUpload(this, 'global')">
             <button class="tool-btn" onclick="document.getElementById('globalChatFile').click()" title="Upload">📷</button>
-            <button id="recordBtnGlobal" class="tool-btn record-btn" style="margin-left:5px;" onclick="startVoiceRecording('global')" title="Record">🎤</button>
+            <button id="recordBtnGlobal" class="tool-btn record-btn" style="margin-left:5px;" onmousedown="startVoiceRecording('global')" title="Record">🎤</button>
             <button class="tool-btn sticker-btn" style="margin-left:5px;" onclick="toggleStickerMenu('global')" title="Stickers">☺</button>
             <button class="tool-btn team-add-custom" style="margin-left:5px;" onclick="openTeamAddModal()" title="Add to Team"><span>Add</span><div class="team-dots"><span class="dot dot-b"></span><span class="dot dot-y"></span></div></button>
             <button class="tool-btn radio-btn" style="margin-left:5px;" onclick="toggleRadio()" title="Radio">📻</button>
@@ -993,7 +1008,7 @@ function renderMessage(m, id) {
     let c = m.content;
     if (c.startsWith('[IMG]')) c = `<img src="${c.substring(5)}" class="chat-media-content" onclick="window.open(this.src)">`;
     else if (c.startsWith('[VID]')) c = `<video src="${c.substring(5)}" controls class="chat-media-content"></video>`;
-    else if (c.startsWith('[AUDIO]')) c = `<audio src="${c.substring(7)}" controls style="width:100%; margin-top:5px;"></audio>`;
+    else if (c.startsWith('[AUDIO]')) c = `<div style="width:100%; min-width:250px;"><audio src="${c.substring(7)}" controls class="chat-audio-player"></audio></div>`;
     
     let delBtn = '';
     const table = id.includes('blue') ? 'blue_chat' : (id.includes('yellow') ? 'yellow_chat' : 'chat_messages');
