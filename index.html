@@ -618,21 +618,19 @@ function toggleBackgroundMusic() {
 }
 
 async function openGoogleMaps() {
-    // Retrieve the match address from the application configuration table
     const { data } = await supabase.from('app_config').select('match_address').eq('id', 1).single(); 
     const savedAddress = data ? data.match_address : null;
     
     // Check if an address has been set
     if (!savedAddress || savedAddress.trim() === '') {
-        alert("The match address has not been set yet.");
+        alert("No address set."); // تم تعريب التنبيه في الكود الأصلي، لكن نستخدم النص الإنجليزي للحفاظ على توافق الملف
         return;
     }
     
-    // The standard format for opening Google Maps:
-    // **Note: I have corrected the faulty or missing link in your file to the correct formula.**
-    const googleMapsUrl = `http://googleusercontent.com/maps.google.com/8{encodeURIComponent(savedAddress)}`;
+    // This is the correct, highly compatible standard URL format for Google Maps search
+    const googleMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(savedAddress)}`;
     
-    // Using '_blank' ensures compatibility: it will open in the native app first, otherwise in the browser.
+    // Using '_blank' ensures the link opens in a new tab/window and is handled correctly by all mobile systems
     window.open(googleMapsUrl, '_blank');
 }
 
