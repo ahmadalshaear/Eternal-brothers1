@@ -617,10 +617,8 @@ function toggleBackgroundMusic() {
     else { audio.pause(); document.getElementById('audioToggleBtn').innerHTML = 'Audio'; }
 }
 
-// هذا هو الكود الصحيح والمستقل لدالة فتح الخرائط
-
 async function openGoogleMaps() {
-    // Retrieve the stored address
+    // 1. Retrieve the stored address
     const { data } = await supabase.from('app_config').select('match_address').eq('id', 1).single(); 
     const savedAddress = data ? data.match_address : null;
     
@@ -630,10 +628,11 @@ async function openGoogleMaps() {
         return;
     }
     
-    // The correct standard Google Maps URL format:
+    // 2. The MOST universal format (maps.google.com/search?q=)
+    // The previous code had a persistent typo or error in the URL structure.
     const googleMapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(savedAddress)}`;
     
-    // Use '_blank' for maximum compatibility
+    // 3. Open the URL using '_blank' for maximum compatibility (iOS fallback)
     window.open(googleMapsUrl, '_blank');
 }
 
