@@ -617,22 +617,26 @@ function toggleBackgroundMusic() {
     else { audio.pause(); document.getElementById('audioToggleBtn').innerHTML = 'Audio'; }
 }
 
+// هذا هو الكود الصحيح والمستقل لدالة فتح الخرائط
+
 async function openGoogleMaps() {
+    // Retrieve the stored address
     const { data } = await supabase.from('app_config').select('match_address').eq('id', 1).single(); 
     const savedAddress = data ? data.match_address : null;
     
-    // Check if an address has been set
+    // Check if the address is set
     if (!savedAddress || savedAddress.trim() === '') {
-        alert("No address set."); // تم تعريب التنبيه في الكود الأصلي، لكن نستخدم النص الإنجليزي للحفاظ على توافق الملف
+        alert("No address set.");
         return;
     }
     
-    // This is the correct, highly compatible standard URL format for Google Maps search
-    const googleMapsUrl = `https://maps.google.com/?q=${encodeURIComponent(savedAddress)}`;
+    // The correct standard Google Maps URL format:
+    const googleMapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(savedAddress)}`;
     
-    // Using '_blank' ensures the link opens in a new tab/window and is handled correctly by all mobile systems
+    // Use '_blank' for maximum compatibility
     window.open(googleMapsUrl, '_blank');
 }
+
 
 
 // -------------------- KIT WASH LOGIC (JAR) --------------------
