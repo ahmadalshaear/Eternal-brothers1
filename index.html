@@ -115,6 +115,60 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 .radio-control-btn { flex: 1; padding: 8px; background: #009688; color: #fff; border-radius: 5px; border: none; cursor: pointer; }
 .stop-btn { background: #d32f2f; }
 
+/* --- SMART TEAM MAKER STYLES --- */
+.tm-container {
+    border: 1px solid #FFD700;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+    background: #252525;
+    margin-bottom: 15px; /* Added spacing */
+}
+.tm-header {
+    margin-top: 0;
+    color: #FFD700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+}
+.tm-player-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #333;
+    margin-bottom: 5px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    border-left: 3px solid #777;
+}
+.tm-name {
+    flex: 2;
+    font-size: 13px;
+    font-weight: bold;
+    color: #e0e0e0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tm-controls {
+    display: flex;
+    gap: 5px;
+}
+.tm-select {
+    background: #111;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.tm-select:focus { border-color: #FFD700; outline: none; }
+.tm-rating { width: 45px; text-align: center; font-weight: bold; color: #FF9800; }
+.tm-pos { width: 65px; }
+
 /* -------------------- 6. MODALS STYLES -------------------- */
 .position-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .position-menu-box { background-color: #2c2c2c; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); width: 90%; max-width: 350px; text-align: center; }
@@ -218,7 +272,8 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 
 <audio id="musicPlayer" loop preload="auto"><source src="https://raw.githubusercontent.com/ahmadalshaear/eternal-brothers-audio/main/Eternal_Brothers%20_FC_new.mp3" type="audio/mp3"></audio>
 <audio id="radioStreamPlayer" preload="none"></audio>
-<audio id="notification-sound" preload="auto"><source src="https://www.soundjay.com/button/button-3.mp3" type="audio/mp3"></audio>
+<audio id="notification-sound" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2346/2346-preview.mp3" type="audio/mp3"></audio>
+
 
 <div id="toastContainer"></div> 
 
@@ -242,7 +297,8 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
   <h1 style="margin-top:0; font-size:28px; display:flex; align-items:center; justify-content:center; gap:8px;">
     ⚽ <span style="color:#1976d2;">Eternal</span> <span style="color:#fbc02d;">Brothers</span> ⚽
   </h1>
-  <p style="margin:5px 0; font-weight:bold; color:#fb8c00; font-size:16px;">The Game will be on Sunday at 9:40AM</p>
+<p id="gameTimeDisplay" style="margin:5px 0; font-weight:bold; color:#fb8c00; font-size:16px;">The Game will be on Sunday at 9:40AM</p>
+
 
   <div id="playerManagement">
     <h2>Add Player</h2>
@@ -262,6 +318,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
       <ul id="historyList" style="text-align:left; font-weight:normal; font-size:14px; color:#ccc;"></ul>
   </div>
 
+
   <div id="kitWashSection">
       <div style="width: 80%; margin: 15px auto; max-width: 400px;">
           <hr style="border-color: #444; margin-bottom: 15px;">
@@ -275,6 +332,16 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
           <ul id="laundryList"></ul>
       </div>
   </div>
+
+  <button onclick="loadUserLogs()" style="background:#455A64; color:#fff; margin-top:5px; width:80%;">Show Activity Log 🕒</button>
+
+<div id="userLogContainer" style="margin-top:10px; padding:10px; background:#2c2c2c; border-radius:8px; max-width: 400px; margin-left: auto; margin-right: auto; text-align:left; display:none;">
+    <h3 style="margin-top:0; color:#90a4ae; border-bottom: 1px solid #555; padding-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
+        User Status 
+        <span style="font-size:11px; color:#00e676; border:1px solid #00e676; padding:2px 5px; border-radius:4px;">Live Updates</span>
+    </h3>
+    <ul id="userLogList" style="text-align:left; font-weight:normal; font-size:14px; color:#ccc; max-height: 250px; overflow-y: auto; padding-right: 5px;"></ul>
+</div>
 
   <div class="chat-container">
     <h2>Group Chat</h2>
@@ -466,9 +533,56 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
         </div>
         <div id="settingsControls" style="display:none; flex-grow: 1; display: flex; flex-direction: column; min-height: 0;">
             <div class="settings-options-container">
+                
+                <div class="tm-container">
+                    <h3 class="tm-header">⚖️ Smart Team Maker (The Sheikh)</h3>
+                    <p style="font-size:11px; color:#aaa; margin-bottom:10px;">
+                        Assign hidden roles & ratings, then auto-balance.
+                    </p>
+
+                    <button onclick="loadTeamMakerUI()" style="background:#424242; color:#fff; width:100%; margin-bottom:10px; border:1px solid #777;">
+                        🔄 Load Main List Players
+                    </button>
+                    
+                    <div id="teamMakerList" style="max-height: 250px; overflow-y: auto; margin-bottom: 12px; padding-right:2px; border-top: 1px solid #444; padding-top: 5px;">
+                        <p style="text-align:center; color:#555; font-size:12px;">Click 'Load' to start...</p>
+                    </div>
+
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="generateBalancedTeams()" style="background: linear-gradient(135deg, #1e88e5, #fdd835); color: #000; font-weight:bold; flex:1; padding: 12px; border: 2px solid #fff;">
+                            ⚡ Create Balanced Teams
+                        </button>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #009688; padding: 10px; border-radius: 8px; margin-bottom: 15px; background: #202020;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="margin-top:0; color:#009688;">🕵️ Multi-Add Monitor</h3>
+                        <button onclick="toggleMultiAdd()" style="background:#333; color:#fff; padding:5px 10px; font-size:11px;">Show/Hide</button>
+                    </div>
+                    <p style="font-size:11px; color:#aaa;">Tracks who added whom to the Main Team.</p>
+                    <ul id="multiAddList" style="list-style:none; padding:0; margin:0; display:none; max-height:200px; overflow-y:auto;">
+                        </ul>
+                </div>
+
+                <div style="border: 1px solid #444; padding: 10px; border-radius: 8px; margin-bottom: 15px; background: #252525;">
+                    <h3 style="margin-top:0; color:#00e676;">⏳ Auto-Add Players</h3>
+                    <p style="font-size:12px; color:#aaa;">Schedule players to join Main Team automatically.</p>
+                    
+                    <div style="display:flex; gap:5px; margin-bottom:10px;">
+                        <input type="text" id="autoNameInput" placeholder="Player Name" style="flex:2; text-align:center;">
+                        <input type="time" id="autoTimeInput" style="flex:1; background:#333; color:#fff; border:1px solid #555; border-radius:5px;">
+                        <button onclick="addScheduledPlayer()" style="background:#009688; color:#fff; font-weight:bold;">+</button>
+                    </div>
+
+                    <ul id="scheduledPlayersList" style="list-style:none; padding:0; margin:0;">
+                        </ul>
+                </div>
                 <h2>Match Details</h2>
                 <label for="matchAddressInput" style="font-weight: bold; display: block; margin-bottom: 5px;">Match Address (Google Maps)</label>
                 <input type="text" id="matchAddressInput" placeholder="Enter full match address or coordinates">
+                <label for="gameTimeInput" style="font-weight: bold; display: block; margin-top: 10px; margin-bottom: 5px;">Game Time Text ⏰</label>
+<input type="text" id="gameTimeInput" placeholder="Ex: Sunday at 9:00 PM" style="width: 100%; text-align: left; margin-bottom: 15px;">
                 <h2>System Options</h2>
                 <div class="setting-item"><label for="allowPlayerEdit">Allow Player Add/Edit/Delete (Main Lists)</label><input type="checkbox" id="allowPlayerEdit"></div>
                 <div class="setting-item"><label for="allowTeamEdit">Allow Player Add/Edit/Delete (Teams)</label><input type="checkbox" id="allowTeamEdit"></div>
@@ -479,18 +593,31 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
                 
                 <div class="setting-item"><label for="hideLaundrySection" style="color:#ff9800;">Hide Kit Wash & Laundry History</label><input type="checkbox" id="hideLaundrySection"></div>
 
+                
                 <div class="danger-zone">
-                    <h2>Danger Zone - Data Deletion</h2>
-                    <button class="danger-btn" onclick="clearGroupChat()">Clear Group Chat (Player Msgs)</button>
-                    <button class="danger-btn" onclick="clearSystemHistory()">Clear System History (Alerts)</button>
-                    <button class="danger-btn" onclick="clearLaundryHistory()">Clear Laundry History</button>
-                    <button class="danger-btn" onclick="clearBlueChat()">Clear Blue Team Chat</button>
-                    <button class="danger-btn" onclick="clearYellowChat()">Clear Yellow Team Chat</button>
-                    <button class="danger-btn" onclick="clearMainTeam()">Clear Main Team List</button>
-                    <button class="danger-btn" onclick="clearWaitingList()">Clear Waiting List</button>
-                    <button class="danger-btn" onclick="clearBlueTeam()">Clear Blue Team List</button>
-                    <button class="danger-btn" onclick="clearYellowTeam()">Clear Yellow Team List</button>
-                </div>
+    <h2>Danger Zone - Data Deletion</h2>
+
+    <h4 style="margin: 10px 0 5px; color: #aaa; text-align:center; border-bottom:1px solid #444; padding-bottom:5px;">📜 History Logs</h4>
+    
+    <button class="danger-btn" style="background-color: #9c27b0; color: #fff;" onclick="clearSystemHistory()">Clear System History (Alerts)</button>
+    
+    <button class="danger-btn" style="background-color: #009688; color: #fff;" onclick="clearLaundryHistory()">Clear Laundry History 🧼</button>
+
+
+    <h4 style="margin: 15px 0 5px; color: #aaa; text-align:center; border-bottom:1px solid #444; padding-bottom:5px;">💬 Clear Chats</h4>
+    
+    <button class="danger-btn" style="background-color: #d32f2f; color: #fff;" onclick="clearGroupChat()">Clear Group Chat (Global)</button>
+    <button class="danger-btn" style="background-color: #1565c0; color: #fff;" onclick="clearBlueChat()">Clear Blue Team Chat 🔵</button>
+    <button class="danger-btn" style="background-color: #fdd835; color: #000;" onclick="clearYellowChat()">Clear Yellow Team Chat 🟡</button>
+
+
+    <h4 style="margin: 15px 0 5px; color: #aaa; text-align:center; border-bottom:1px solid #444; padding-bottom:5px;">📋 Clear Lists</h4>
+    
+    <button class="danger-btn" style="background-color: #d32f2f; color: #fff;" onclick="clearMainTeam()">Clear Main Team List</button>
+    <button class="danger-btn" style="background-color: #d32f2f; color: #fff;" onclick="clearWaitingList()">Clear Waiting List</button>
+    <button class="danger-btn" style="background-color: #1565c0; color: #fff;" onclick="clearBlueTeam()">Clear Blue Team List 🔵</button>
+    <button class="danger-btn" style="background-color: #fdd835; color: #000;" onclick="clearYellowTeam()">Clear Yellow Team List 🟡</button>
+</div>
             </div> 
             <div class="settings-footer"><button id="saveSettingsBtn" onclick="saveSettings()">Save & Close</button></div>
         </div>
@@ -551,8 +678,7 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script> 
-
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
 // -------------------- GLOBAL CONFIG --------------------
 const supabaseUrl = "https://wihhlvgkjglphjzhivdn.supabase.co"; 
@@ -778,10 +904,25 @@ async function sendMessageToGroup(sender, type) {
 }
 
 async function showSettingsModal() {
-    document.getElementById('settingsPassword').value = ''; document.getElementById('passwordError').style.display = 'none'; document.getElementById('passwordSection').style.display = 'block'; document.getElementById('settingsControls').style.display = 'none'; document.getElementById('settingsModalOverlay').style.display = 'flex';
+    document.getElementById('settingsPassword').value = ''; 
+    document.getElementById('passwordError').style.display = 'none'; 
+    document.getElementById('passwordSection').style.display = 'block'; 
+    document.getElementById('settingsControls').style.display = 'none'; 
+    document.getElementById('settingsModalOverlay').style.display = 'flex';
+    
+    // جلب العنوان
     const { data } = await supabase.from('app_config').select('match_address').eq('id', 1).single(); 
     document.getElementById('matchAddressInput').value = data ? data.match_address : '';
+    
+    // جلب وقت المباراة المحفوظ
+    document.getElementById('gameTimeInput').value = systemConfig.gameTimeText || "The Game will be on Sunday at 9:40AM";
+
+    // Show Auto-Schedule List
+    renderScheduledList();
+    // Show Multi-Add Monitor
+    renderMultiAddMonitor();
 }
+
 function authenticateSettings() {
     if (document.getElementById('settingsPassword').value === ADMIN_PASSWORD) {
         document.getElementById('passwordSection').style.display = 'none'; document.getElementById('settingsControls').style.display = 'flex';
@@ -802,11 +943,30 @@ async function saveSettings() {
         allowChat: document.getElementById('allowChat').checked, 
         enforceTimeRestriction: document.getElementById('enforceTimeRestriction').checked,
         disableMainListPin: document.getElementById('disableMainListPin').checked,
-        hideLaundrySection: document.getElementById('hideLaundrySection').checked 
+        hideLaundrySection: document.getElementById('hideLaundrySection').checked,
+        
+        scheduledList: systemConfig.scheduledList || [], 
+        multiAddLog: systemConfig.multiAddLog || [], // Preserve Multi-Add log
+
+        gameTimeText: document.getElementById('gameTimeInput').value.trim() 
     };
+
     await supabase.from('app_config').update({ system_config: JSON.stringify(newConfig), match_address: document.getElementById('matchAddressInput').value.trim() }).eq('id', 1);
-    systemConfig = newConfig; matchAddress = document.getElementById('matchAddressInput').value.trim(); loadMatchAddress(); applyUIRestrictions(); document.getElementById('settingsModalOverlay').style.display = 'none'; alert('Settings saved!');
+    
+    systemConfig = newConfig; 
+    matchAddress = document.getElementById('matchAddressInput').value.trim(); 
+    
+    // --- تحديث النص فوراً على الشاشة ---
+    if(systemConfig.gameTimeText) {
+        document.getElementById('gameTimeDisplay').innerText = systemConfig.gameTimeText;
+    }
+
+    loadMatchAddress(); 
+    applyUIRestrictions(); 
+    document.getElementById('settingsModalOverlay').style.display = 'none'; 
+    alert('Settings saved!');
 }
+
 
 async function clearTableData(tableName, confirmMessage, friendlyName) { if (!confirm(confirmMessage)) return; await supabase.from(tableName).delete().gt('id', 0); alert(`${friendlyName} cleared.`); reloadList(tableName); }
 function clearGroupChat() { clearTableData('chat_messages', "Clear Group Chat?", "Group Chat"); }
@@ -817,7 +977,14 @@ function clearMainTeam() { clearTableData('main_team', "Clear Main Team?", "Main
 function clearWaitingList() { clearTableData('waiting_list', "Clear Waiting List?", "Waiting List"); }
 function clearBlueTeam() { clearTableData('blue_team', "Clear Blue Team?", "Blue Team"); }
 function clearYellowTeam() { clearTableData('yellow_team', "Clear Yellow Team?", "Yellow Team"); }
-function clearLaundryHistory() { clearTableData('laundry_history', "Clear Laundry History?", "Laundry History"); }
+async function clearLaundryHistory() {
+    const pin = prompt("Enter PIN (2023) to clear Laundry History:");
+    if (pin !== "2023") return alert("Incorrect PIN! ❌");
+    
+    // إذا كان الرمز صحيحاً، سيقوم بتنفيذ المسح
+    clearTableData('laundry_history', "Are you sure you want to clear Laundry History?", "Laundry History");
+}
+
 
 async function canEditCaptain(table, playerId) {
     if (table !== 'blue_team' && table !== 'yellow_team') return true;
@@ -840,9 +1007,18 @@ async function verifyIndividualPin(table, id) {
 
 async function loadSystemConfig() {
     const { data } = await supabase.from('app_config').select('system_config').eq('id', 1).single(); 
-    if (data && data.system_config) systemConfig = { ...systemConfig, ...JSON.parse(data.system_config) };
+    if (data && data.system_config) {
+        systemConfig = { ...systemConfig, ...JSON.parse(data.system_config) };
+        
+        // --- هذا الجزء كان ناقصاً لعرض الوقت عند التحميل ---
+        if (systemConfig.gameTimeText) {
+            const el = document.getElementById('gameTimeDisplay');
+            if(el) el.innerText = systemConfig.gameTimeText;
+        }
+    }
     applyUIRestrictions(); 
 }
+
 function applyUIRestrictions() {
     document.getElementById('playerManagement').style.display = systemConfig.allowPlayerEdit ? 'block' : 'none';
     document.querySelectorAll('.action-btn').forEach(btn => {
@@ -870,11 +1046,25 @@ async function addPlayer(){
   
   const name = document.getElementById("nameInput").value.trim();
   
-  // --- Validation: English & Full Name ---
+  // --- Validation: English, Full Name, Last Name Length ---
   if(!name) return alert("Enter name");
   if (!/^[A-Za-z0-9\s]+$/.test(name)) return alert("English letters only allowed!");
-  if (name.split(/\s+/).length < 2) return alert("Full Name Required (First & Last Name)!");
-  // -------------------------------------
+  
+  const nameParts = name.split(/\s+/);
+  if (nameParts.length < 2) return alert("Full Name Required (First & Last Name)!");
+  
+  // STRICT NAME CHECK: Last name >= 3 chars
+  if (nameParts[nameParts.length - 1].length < 3) {
+      return alert("Last Name must be at least 3 characters long!");
+  }
+  
+  // --- NEW: Check if Name Already Exists (Prevent Duplicates) ---
+  const { data: existMain } = await supabase.from("main_team").select("id").ilike("name", name);
+  const { data: existWait } = await supabase.from("waiting_list").select("id").ilike("name", name);
+
+  if ((existMain && existMain.length > 0) || (existWait && existWait.length > 0)) {
+      return alert("Name already exists! Please use a different name.");
+  }
   
   let pin = "0000"; 
   if (!systemConfig.disableMainListPin) {
@@ -885,11 +1075,24 @@ async function addPlayer(){
   const { data: team } = await supabase.from("main_team").select("id");
   const table = team.length < 24 ? "main_team" : "waiting_list";
   await supabase.from(table).insert([{ name, time: Date.now(), player_pin: pin }]);
+
+  // --- MULTI-ADD MONITOR LOGGING ---
+  const adderName = localStorage.getItem('chat_username') || "Unknown User";
+  if (!systemConfig.multiAddLog) systemConfig.multiAddLog = [];
+  systemConfig.multiAddLog.unshift({
+      adder: adderName,
+      player: name,
+      time: Date.now()
+  });
+  // Keep log size manageable (last 100)
+  if (systemConfig.multiAddLog.length > 100) systemConfig.multiAddLog = systemConfig.multiAddLog.slice(0, 100);
+  saveConfigToSupabase(); // Save the log to DB
   
   if(team.length < 24) { sendSystemMessageToChat(name, `joined the Main Team`); } 
   else { sendSystemMessageToChat(name, `added to the Waiting List`); alert(`Main team is full (24). ${name} has been added to the Waiting List.`); }
   document.getElementById("nameInput").value=""; loadPlayers();
 }
+
 
 async function loadPlayers(){
   const { data: team } = await supabase.from("main_team").select("*").order("id");
@@ -1082,7 +1285,14 @@ async function loadMatchAddress() {
     matchAddress = data ? data.match_address : "Address 📍";
     document.getElementById('addressBtn').textContent = (matchAddress.length > 20 && !matchAddress.includes("set")) ? "Match Address 📍" : `${matchAddress} 📍`;
 }
-function playNotificationSound() { document.getElementById('notification-sound').play().catch(()=>{}); }
+function playNotificationSound() { 
+    const audio = document.getElementById('notification-sound');
+    if (audio) {
+        audio.currentTime = 0; // إعادة الصوت للبداية لتكراره
+        audio.play().catch(e => console.log("Audio play blocked:", e));
+    }
+}
+
 
 async function loadSystemHistory(toggle = true) {
   const historyContainer = document.getElementById('systemHistoryContainer');
@@ -1122,7 +1332,6 @@ async function handleFileUpload(input, context) {
     await supabase.from(table).insert([{ username: name, content }]);
     input.value = '';
 }
-
 function toggleRadio() { const e=document.getElementById('radioPlayerSection'); e.style.display = e.style.display==='block'?'none':'block'; }
 function playRadio() { const a=document.getElementById('radioStreamPlayer'); const s=document.getElementById('radioSelect'); if(a.src!==s.value) a.src=s.value; a.play(); }
 function stopRadio() { document.getElementById('radioStreamPlayer').pause(); document.getElementById('radioPlayerSection').style.display='none'; }
@@ -1410,7 +1619,9 @@ async function openTeamAddModal() {
     select.innerHTML = '<option value="">Loading players...</option>';
 
     // 1. Fetch Main Team and both Colored Teams data from Supabase
-    const { data: mainTeam } = await supabase.from('main_team').select('name').order('id');
+    // --- التعديل تم هنا: الترتيب حسب الاسم تصاعدياً ---
+    const { data: mainTeam } = await supabase.from('main_team').select('name').order('name', { ascending: true });
+    // ------------------------------------------------
     const { data: blueTeam } = await supabase.from('blue_team').select('name');
     const { data: yellowTeam } = await supabase.from('yellow_team').select('name');
 
@@ -1442,6 +1653,7 @@ async function openTeamAddModal() {
         select.innerHTML = '<option value="">No available players</option>';
     }
 }
+
 
 // --- Confirm Addition (Immediate Transfer) ---
 function confirmAddToTeam(team) {
@@ -1483,15 +1695,35 @@ function updateOnlineUsersUI(users) {
 function setupRealtime() {
   const myName = localStorage.getItem('chat_username') || 'Guest';
   
+  // 1. Global Chat
   supabase.channel('global-chat-updates')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => { renderMessage(payload.new, 'chatMessages'); })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => { 
+        renderMessage(payload.new, 'chatMessages'); 
+        // شغل الصوت فقط إذا لم تكن أنت المرسل (لأنك سمعته عند الضغط)
+        if (payload.new.username !== myName) playNotificationSound();
+    })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_messages' }, () => { loadChatMessages(); })
     .subscribe();
     
   supabase.channel('system-history-updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_history' }, () => { const hc = document.getElementById('systemHistoryContainer'); if (hc.style.display === 'block') loadSystemHistory(false); }).subscribe();
   supabase.channel('laundry-history-updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'laundry_history' }, () => { const container = document.getElementById('laundryHistoryContainer'); if (container.style.display === 'block') loadLaundryHistory(false); }).subscribe();
-  supabase.channel('blue-chat-updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'blue_chat' }, (payload) => { if(document.getElementById('blue').style.display === 'block') renderMessage(payload.new, 'blueChatMessages'); }).subscribe();
-  supabase.channel('yellow-chat-updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'yellow_chat' }, (payload) => { if(document.getElementById('yellow').style.display === 'block') renderMessage(payload.new, 'yellowChatMessages'); }).subscribe();
+  
+  // 2. Blue Chat
+  supabase.channel('blue-chat-updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'blue_chat' }, (payload) => { 
+      if(document.getElementById('blue').style.display === 'block') {
+          renderMessage(payload.new, 'blueChatMessages'); 
+          if (payload.new.username !== myName) playNotificationSound();
+      }
+  }).subscribe();
+
+  // 3. Yellow Chat
+  supabase.channel('yellow-chat-updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'yellow_chat' }, (payload) => { 
+      if(document.getElementById('yellow').style.display === 'block') {
+          renderMessage(payload.new, 'yellowChatMessages'); 
+          if (payload.new.username !== myName) playNotificationSound();
+      }
+  }).subscribe();
+
   supabase.channel('teams-updates').on('postgres_changes', { event: '*', schema: 'public', table: 'main_team' }, () => loadPlayers()).on('postgres_changes', { event: '*', schema: 'public', table: 'waiting_list' }, () => loadPlayers()).on('postgres_changes', { event: '*', schema: 'public', table: 'blue_team' }, () => loadBlue()).on('postgres_changes', { event: '*', schema: 'public', table: 'yellow_team' }, () => loadYellow()).subscribe();
 
   roomChannel = supabase.channel('online-room', { config: { presence: { key: myId, }, }, });
@@ -1512,6 +1744,8 @@ function setupRealtime() {
     })
     .subscribe(async (status) => { if (status === 'SUBSCRIBED') { const name = document.getElementById('chatNameInput').value || 'Guest'; await roomChannel.track({ name: name, online_at: new Date().toISOString() }); } });
 }
+
+
 
 async function checkAndRunAutoWash() {
     const now = new Date();
@@ -1540,24 +1774,6 @@ async function checkAndRunAutoWash() {
         showToast(`🤖 Auto-System: Selected ${winner.name} for Laundry!`);
     }
 }
-
-(async function init() {
-    const storedUsername = localStorage.getItem('chat_username');
-    if (storedUsername) {
-        document.getElementById('chatNameInput').value = storedUsername;
-        document.getElementById('blueChatNameInput').value = storedUsername;
-        document.getElementById('yellowChatNameInput').value = storedUsername;
-        document.getElementById('nameInput').value = storedUsername;
-    }
-
-    document.getElementById('chatMsgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { sendMessage(); } });
-    document.getElementById('blueChatMsgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { sendTeamMessage('blue'); } });
-    document.getElementById('yellowChatMsgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { sendTeamMessage('yellow'); } });
-
-    await loadSystemConfig(); loadMatchAddress(); loadPlayers(); loadBlue(); loadYellow(); loadChatMessages(); 
-    checkAndRunAutoWash(); 
-    showSection('main');
-})();
 
 // --- NEW ENGLISH NAME VALIDATION FUNCTIONS (UPDATED) ---
 function submitEnglishName() {
@@ -1589,6 +1805,10 @@ function submitEnglishName() {
     updateAllNameInputs(name);
     document.getElementById('englishNameModal').style.display = 'none';
     setupRealtime(); 
+    
+    // Log online status
+    logUserStatus('Online 🟢');
+    initUserTracking();
 }
 
 function updateAllNameInputs(name) {
@@ -1617,6 +1837,790 @@ setTimeout(function() {
     }
 }, 1000); 
 
+// -------------------- USER ACTIVITY LOGIC (UPDATED WITH TIME & UNIQUE) --------------------
+
+// 1. Function to save status to Supabase
+async function logUserStatus(status) {
+    const name = localStorage.getItem('chat_username');
+    if (!name) return; 
+
+    await supabase.from('user_logs').insert([{ 
+        username: name, 
+        status: status 
+    }]);
+}
+
+// 2. Start tracking (Call this when app starts)
+function initUserTracking() {
+    const name = localStorage.getItem('chat_username');
+    
+    // Log "Online" immediately if name exists
+    if (name) {
+        logUserStatus('Online 🟢');
+    }
+
+    // Listen for tab switching or closing
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+            // User minimized or closed the app
+            logUserStatus('Offline 🔴');
+        } else {
+             // User came back
+             logUserStatus('Online 🟢');
+        }
+    });
+}
+
+// 3. Helper for Time Ago
+function timeAgo(dateParam) {
+    const date = typeof dateParam === 'object' ? dateParam : new Date(dateParam);
+    const today = new Date();
+    const seconds = Math.round((today - date) / 1000);
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.round(minutes / 60);
+    const days = Math.round(hours / 24);
+
+    if (seconds < 60) return 'Just now';
+    else if (minutes < 60) return `${minutes}m ago`;
+    else if (hours < 24) return `${hours}h ago`;
+    else return `${days}d ago`;
+}
+
+// 4. MAIN LOAD FUNCTION (Unique Users + Time) - NOW PROTECTED WITH PIN
+async function loadUserLogs() {
+    // PROTECTED: Ask for PIN
+    const pin = prompt("Enter Admin PIN to view Activity Log:");
+    if (pin !== ADMIN_PASSWORD) {
+        return alert("Access Denied! ❌");
+    }
+
+    const container = document.getElementById('userLogContainer');
+    const list = document.getElementById('userLogList');
+    
+    // Toggle visibility with smooth scroll
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        container.style.display = 'none';
+        return; 
+    }
+
+    list.innerHTML = '<li style="text-align:center;">Loading status...</li>';
+
+    // Fetch last 150 logs to ensure coverage
+    const { data, error } = await supabase
+        .from('user_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(150);
+
+    if (error || !data || data.length === 0) {
+        list.innerHTML = '<li style="text-align:center; color:#777;">No active users found.</li>';
+        return;
+    }
+
+    // Filter to show only unique users (latest status)
+    const uniqueUsers = {};
+    data.forEach(log => {
+        if (!uniqueUsers[log.username]) {
+            uniqueUsers[log.username] = log;
+        }
+    });
+
+    list.innerHTML = '';
+    
+    // Render List
+    Object.values(uniqueUsers).forEach(user => {
+        const isOnline = user.status.includes('Online');
+        const timeDisplay = timeAgo(user.created_at);
+        
+        // Dynamic Styles
+        const statusColor = isOnline ? '#00e676' : '#757575'; 
+        const statusText = isOnline ? 'Active' : 'Last seen';
+        const nameColor = isOnline ? '#fff' : '#aaa';
+        
+        list.innerHTML += `
+            <li style="padding: 10px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); margin-bottom: 2px; border-radius: 4px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position:relative;">
+                        <div style="width:12px; height:12px; background:${statusColor}; border-radius:50%; box-shadow: 0 0 8px ${statusColor}; border: 1px solid #333;"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="color: ${nameColor}; font-weight:bold; font-size:15px;">${user.username}</span>
+                        <span style="color: #888; font-size: 11px;">${statusText} • ${timeDisplay}</span>
+                    </div>
+                </div>
+            </li>
+        `;
+    });
+}
+
+// --- LOGIC FOR AUTO-SCHEDULE ---
+
+// 1. Add player to schedule
+async function addScheduledPlayer() {
+    const name = document.getElementById('autoNameInput').value.trim();
+    const time = document.getElementById('autoTimeInput').value; // Returns HH:MM
+
+    if (!name || !time) return alert("Please enter Name and Time!");
+
+    // Initialize list if missing
+    if (!systemConfig.scheduledList) systemConfig.scheduledList = [];
+    
+    // Add new task
+    systemConfig.scheduledList.push({ name: name, time: time });
+    
+    // Save to Supabase and update UI
+    await saveConfigToSupabase();
+    renderScheduledList();
+    
+    // Clear inputs
+    document.getElementById('autoNameInput').value = '';
+}
+
+// 2. Remove player from schedule
+async function removeScheduledPlayer(index) {
+    if (!confirm("Remove this scheduled task?")) return;
+    systemConfig.scheduledList.splice(index, 1);
+    await saveConfigToSupabase();
+    renderScheduledList();
+}
+
+// 3. Render the list inside Settings
+function renderScheduledList() {
+    const list = document.getElementById('scheduledPlayersList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!systemConfig.scheduledList || systemConfig.scheduledList.length === 0) {
+        list.innerHTML = '<li style="color:#777; font-size:12px; text-align:center;">No players scheduled.</li>';
+        return;
+    }
+
+    systemConfig.scheduledList.forEach((item, index) => {
+        // Convert 24h time to 12h for display
+        const [h, m] = item.time.split(':');
+        const d = new Date(); d.setHours(h); d.setMinutes(m);
+        const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+        list.innerHTML += `
+            <li style="display:flex; justify-content:space-between; align-items:center; background:#333; padding:5px 10px; margin-bottom:5px; border-radius:5px; border-left: 3px solid #FF9800;">
+                <span style="color:#fff; font-weight:bold;">${item.name}</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="color:#00e676; font-family:monospace;">${timeStr}</span>
+                    <button onclick="removeScheduledPlayer(${index})" style="background:#d32f2f; padding:2px 8px; font-size:12px;">✕</button>
+                </div>
+            </li>
+        `;
+    });
+}
+
+// 4. Helper to save config (Updates existing config without closing modal)
+async function saveConfigToSupabase() {
+    await supabase.from('app_config').update({ 
+        system_config: JSON.stringify(systemConfig),
+        match_address: document.getElementById('matchAddressInput').value.trim() 
+    }).eq('id', 1);
+}
+
+// 5. Main Timer Engine (Runs every 10 seconds)
+setInterval(async () => {
+    if (!systemConfig.scheduledList || systemConfig.scheduledList.length === 0) return;
+
+    const now = new Date();
+    const currentHours = String(now.getHours()).padStart(2, '0');
+    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+    const currentTime = `${currentHours}:${currentMinutes}`;
+
+    const toAdd = [];
+    const remaining = [];
+
+    systemConfig.scheduledList.forEach(item => {
+        if (item.time === currentTime) {
+            toAdd.push(item);
+        } else {
+            remaining.push(item);
+        }
+    });
+
+    if (toAdd.length > 0) {
+        console.log("Auto-adding players:", toAdd);
+        
+        for (const p of toAdd) {
+            await autoAddPlayerToMain(p.name);
+        }
+
+        systemConfig.scheduledList = remaining;
+        await saveConfigToSupabase();
+        renderScheduledList();
+    }
+
+}, 10000); 
+
+// 6. Direct Add Function (Silent - No Chat Message)
+async function autoAddPlayerToMain(name) {
+    // Check for duplicates
+    const { data: exist } = await supabase.from("main_team").select("id").ilike("name", name);
+    if (exist && exist.length > 0) return; 
+
+    // Add to Main Team
+    await supabase.from("main_team").insert([{ 
+        name: name, 
+        time: Date.now(), 
+        player_pin: "0000" 
+    }]);
+
+    // Chat notification removed as requested
+    loadPlayers(); 
+}
+
+// --- NEW FEATURE: MULTI-ADD MONITOR ---
+function toggleMultiAdd() {
+    const list = document.getElementById('multiAddList');
+    if (list.style.display === 'none') {
+        renderMultiAddMonitor();
+        list.style.display = 'block';
+    } else {
+        list.style.display = 'none';
+    }
+}
+
+function renderMultiAddMonitor() {
+    const list = document.getElementById('multiAddList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    const logs = systemConfig.multiAddLog || [];
+
+    if (logs.length === 0) {
+        list.innerHTML = '<li style="color:#777; font-size:11px; text-align:center;">No data recorded yet.</li>';
+        return;
+    }
+
+    logs.forEach((log, index) => {
+        const timeStr = new Date(log.time).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+        list.innerHTML += `
+            <li style="display:flex; justify-content:space-between; align-items:center; background:#2c2c2c; padding:6px; margin-bottom:4px; border-radius:4px; border-left: 2px solid #009688;">
+                <div style="font-size:12px;">
+                    <span style="color:#aaa;">Device:</span> <strong style="color:#fff;">${log.adder}</strong><br>
+                    <span style="color:#aaa;">Added:</span> <span style="color:#FF9800;">${log.player}</span>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:10px; color:#666;">${timeStr}</div>
+                    <button onclick="deleteMultiAddLog(${index})" style="background:transparent; color:#d32f2f; font-size:12px; padding:0;">✕</button>
+                </div>
+            </li>
+        `;
+    });
+}
+
+async function deleteMultiAddLog(index) {
+    if(!confirm("Delete this log entry?")) return;
+    if(!systemConfig.multiAddLog) return;
+    
+    systemConfig.multiAddLog.splice(index, 1);
+    await saveConfigToSupabase();
+    renderMultiAddMonitor();
+}
+
+
+// -------------------- SMART TEAM MAKER LOGIC --------------------
+
+// 1. UPDATE THIS FUNCTION (UI with 2 Positions & 1-10 Ratings)
+async function loadTeamMakerUI() {
+    const listDiv = document.getElementById('teamMakerList');
+    listDiv.innerHTML = '<p style="text-align:center; color:#aaa;">Loading...</p>';
+
+    const { data: mainTeam } = await supabase.from('main_team').select('*').order('name');
+    
+    if (!mainTeam || mainTeam.length === 0) {
+        listDiv.innerHTML = '<p style="text-align:center; color:#e57373;">Main Team is empty!</p>';
+        return;
+    }
+
+    if (!systemConfig.playerStats) systemConfig.playerStats = {};
+
+    listDiv.innerHTML = '';
+    
+    // Position Options Helper
+    const createPosOptions = (selected) => {
+        const positions = ['GK','CB','LB','RB','CDM','CM','CAM','LW','RW','ST'];
+        let html = '<option value="">None</option>';
+        positions.forEach(p => {
+            html += `<option value="${p}" ${selected === p ? 'selected' : ''}>${p}</option>`;
+        });
+        return html;
+    };
+
+    // Rating Options Helper (1-10)
+    const createRateOptions = (selected) => {
+        const ratings = [
+            {v:1, t:"1 - Weak 🧱"}, {v:2, t:"2 - Poor"}, {v:3, t:"3 - Slow"}, 
+            {v:4, t:"4 - Avg"}, {v:5, t:"5 - Decent"}, {v:6, t:"6 - Good"}, 
+            {v:7, t:"7 - V.Good"}, {v:8, t:"8 - Pro 🔥"}, 
+            {v:9, t:"9 - Star 🌟"}, {v:10, t:"10 - LEGEND 🐐"}
+        ];
+        let html = '';
+        ratings.forEach(r => {
+            html += `<option value="${r.v}" ${selected === r.v ? 'selected' : ''}>${r.t}</option>`;
+        });
+        return html;
+    };
+
+    mainTeam.forEach(player => {
+        const saved = systemConfig.playerStats[player.name] || {};
+        const savedPos1 = saved.pos1 || 'CM'; // Primary
+        const savedPos2 = saved.pos2 || '';   // Secondary
+        const savedRate = saved.rate || 5;
+
+        const row = document.createElement('div');
+        row.className = 'tm-player-row';
+        
+        row.innerHTML = `
+            <div style="flex:2; overflow:hidden;">
+                <span class="tm-name" style="display:block;">${player.name}</span>
+            </div>
+            <div class="tm-controls" style="flex:4; justify-content:flex-end; gap:3px;">
+                <select id="tm-pos1-${player.id}" class="tm-select tm-pos1" style="width:50px; border:1px solid #1e88e5;" title="Primary Position">
+                    ${createPosOptions(savedPos1)}
+                </select>
+                <select id="tm-pos2-${player.id}" class="tm-select tm-pos2" style="width:50px; border:1px solid #777; opacity:0.8;" title="Secondary Position">
+                    ${createPosOptions(savedPos2)}
+                </select>
+                <select id="tm-rate-${player.id}" class="tm-select tm-rating" style="width:85px; font-weight:bold; color:#FFD700;">
+                    ${createRateOptions(savedRate)}
+                </select>
+            </div>
+        `;
+        listDiv.appendChild(row);
+    });
+}
+
+// 2. UPDATE THIS FUNCTION (Smart Dual-Position Logic)
+async function generateBalancedTeams() {
+    const listDiv = document.getElementById('teamMakerList');
+    const inputs = listDiv.querySelectorAll('.tm-player-row');
+    
+    if (inputs.length === 0) return alert("Please click 'Load Main List Players' first!");
+    
+    if (!confirm("⚠️ Create Balanced Teams?\n\nSystem will check Primary AND Secondary positions to fill gaps.")) return;
+
+    let allPlayers = [];
+    if (!systemConfig.playerStats) systemConfig.playerStats = {};
+
+    // --- A. Harvest Data ---
+    inputs.forEach(row => {
+        const name = row.querySelector('.tm-name').innerText;
+        const pos1 = row.querySelector('.tm-pos1').value || 'CM';
+        const pos2 = row.querySelector('.tm-pos2').value || '';
+        const rate = parseInt(row.querySelector('.tm-rating').value);
+        
+        // Save both positions
+        systemConfig.playerStats[name] = { pos1, pos2, rate };
+        
+        // 'activePos' starts as Primary, but can change if needed
+        allPlayers.push({ name, pos1, pos2, rate, activePos: pos1 });
+    });
+
+    await saveConfigToSupabase();
+
+    // --- B. INTELLIGENT ROLE SWAPPING (The Sheikh's Brain 🧠) ---
+    // Define Categories
+    const isGK = p => p === 'GK';
+    const isDEF = p => ['CB', 'LB', 'RB'].includes(p);
+    const isMID = p => ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p);
+    const isFWD = p => ['ST', 'LW', 'RW', 'CF'].includes(p);
+
+    // Count Primary Roles
+    let defCount = allPlayers.filter(p => isDEF(p.pos1)).length;
+    let midCount = allPlayers.filter(p => isMID(p.pos1)).length;
+    let fwdCount = allPlayers.filter(p => isFWD(p.pos1)).length;
+
+    // Ideal Minimums (Based on 24 players / 2 teams)
+    const TARGET_DEF = 8; // 4 per team
+    const TARGET_MID = 8; // 4 per team
+    // Forwards just take whatever is left
+
+    // 1. Fix Defense Shortage
+    if (defCount < TARGET_DEF) {
+        // Find players who are NOT primary defenders, but HAVE defense as secondary
+        const potentialDefs = allPlayers.filter(p => !isDEF(p.pos1) && isDEF(p.pos2));
+        
+        potentialDefs.forEach(p => {
+            if (defCount < TARGET_DEF) {
+                p.activePos = p.pos2; // Switch them to Defense!
+                defCount++;
+                console.log(`Switched ${p.name} to Defense (Secondary)`);
+            }
+        });
+    }
+
+    // 2. Fix Midfield Shortage (if any)
+    if (midCount < TARGET_MID) {
+        const potentialMids = allPlayers.filter(p => !isMID(p.pos1) && isMID(p.pos2) && p.activePos === p.pos1);
+        potentialMids.forEach(p => {
+            if (midCount < TARGET_MID) {
+                p.activePos = p.pos2;
+                midCount++;
+            }
+        });
+    }
+
+    // --- C. Sort & Distribute ---
+    allPlayers.sort((a, b) => b.rate - a.rate); // Strongest first
+
+    let blueTeam = [];
+    let yellowTeam = [];
+    let blueScore = 0;
+    let yellowScore = 0;
+    let assignedNames = new Set();
+
+    function distributeGroup(group) {
+        if (group.length === 0) return;
+        // Shuffle same-rated players
+        group.sort((a, b) => {
+            if (b.rate !== a.rate) return b.rate - a.rate;
+            return 0.5 - Math.random();
+        });
+
+        group.forEach(p => {
+            if (assignedNames.has(p.name)) return;
+
+            const addToBlue = (blueScore <= yellowScore && blueTeam.length < 12) || yellowTeam.length >= 12;
+            
+            if (addToBlue && blueTeam.length < 12) {
+                blueTeam.push(p);
+                blueScore += p.rate;
+            } else if (yellowTeam.length < 12) {
+                yellowTeam.push(p);
+                yellowScore += p.rate;
+            }
+            assignedNames.add(p.name);
+        });
+    }
+
+    // Distribute based on the NEW 'activePos'
+    // 1. GK
+    distributeGroup(allPlayers.filter(p => isGK(p.activePos) || isGK(p.pos2))); // Check pos2 for GK specifically as it's critical
+    // 2. DEF
+    distributeGroup(allPlayers.filter(p => isDEF(p.activePos)));
+    // 3. MID
+    distributeGroup(allPlayers.filter(p => isMID(p.activePos)));
+    // 4. FWD
+    distributeGroup(allPlayers.filter(p => isFWD(p.activePos)));
+    // 5. Remainder
+    distributeGroup(allPlayers.filter(p => !assignedNames.has(p.name)));
+
+    // --- D. Save to DB ---
+    async function saveTeamToDB(teamArr, tableName) {
+        let counts = {}; 
+
+        const dbRecords = teamArr.map(p => {
+            // Use activePos for mapping
+            let mapKey = p.activePos;
+            if (!posMap[mapKey]) mapKey = 'CM'; 
+
+            let coordsObj;
+            if (Array.isArray(posMap[mapKey])) {
+                if (!counts[mapKey]) counts[mapKey] = 0;
+                coordsObj = posMap[mapKey][counts[mapKey] % posMap[mapKey].length];
+                counts[mapKey]++;
+            } else {
+                coordsObj = posMap[mapKey] || posMap['CM'];
+            }
+
+            return {
+                name: p.name,
+                time: Date.now(),
+                position_code: coordsObj.c,
+                position: JSON.stringify({left: coordsObj.x, top: coordsObj.y}),
+                player_pin: null 
+            };
+        });
+
+        if (dbRecords.length > 0) {
+            await supabase.from(tableName).insert(dbRecords);
+        }
+    }
+
+    showToast("🧠 Smart Balancing...");
+    
+    await supabase.from('blue_team').delete().gt('id', 0);
+    await supabase.from('yellow_team').delete().gt('id', 0);
+
+    await saveTeamToDB(blueTeam, 'blue_team');
+    await saveTeamToDB(yellowTeam, 'yellow_team');
+
+    document.getElementById('settingsModalOverlay').style.display = 'none';
+    loadBlue();
+    loadYellow();
+    
+    setTimeout(() => {
+        alert(`✅ Teams Balanced!\n\nCheck positions - some players may have switched to their secondary roles to balance the field!`);
+    }, 500);
+}
+
+
+// 3. UPDATE THIS FUNCTION (Logic to Save Data & Balance 1-10)
+async function generateBalancedTeams() {
+    const listDiv = document.getElementById('teamMakerList');
+    const inputs = listDiv.querySelectorAll('.tm-player-row');
+    
+    if (inputs.length === 0) return alert("Please load players first.");
+    if (!confirm("⚠️ Create Balanced Teams?\nThis will overwrite current teams and SAVE player ratings.")) return;
+
+    let allPlayers = [];
+    if (!systemConfig.playerStats) systemConfig.playerStats = {};
+
+    // A. Harvest Data & SAVE TO MEMORY
+    inputs.forEach(row => {
+        const name = row.querySelector('.tm-name').innerText;
+        const idPart = row.querySelector('select').id.split('-')[2]; 
+        const pos = document.getElementById(`tm-pos-${idPart}`).value;
+        const rate = parseInt(document.getElementById(`tm-rate-${idPart}`).value);
+        
+        // Save to system config object
+        systemConfig.playerStats[name] = { pos: pos, rate: rate };
+        
+        allPlayers.push({ name, pos, rate });
+    });
+
+    // Save to Database immediately so we don't lose ratings
+    await saveConfigToSupabase();
+
+    // B. Sort by Rating (Highest to Lowest)
+    allPlayers.sort((a, b) => b.rate - a.rate);
+
+    let blueTeam = [];
+    let yellowTeam = [];
+    let blueScore = 0;
+    let yellowScore = 0;
+
+    // Helper: Distribute Logic
+    function distributeGroup(group) {
+        // Add randomness for players with SAME rating
+        group.sort((a, b) => {
+            if (b.rate !== a.rate) return b.rate - a.rate;
+            return 0.5 - Math.random();
+        });
+
+        group.forEach(p => {
+            // Balance logic: Add to weaker team
+            const addToBlue = (blueScore <= yellowScore && blueTeam.length < 12) || yellowTeam.length >= 12;
+            
+            if (addToBlue && blueTeam.length < 12) {
+                blueTeam.push(p);
+                blueScore += p.rate;
+            } else if (yellowTeam.length < 12) {
+                yellowTeam.push(p);
+                yellowScore += p.rate;
+            }
+        });
+    }
+
+    // C. Process by specific groups to ensure structure
+    distributeGroup(allPlayers.filter(p => p.pos === 'GK'));
+    distributeGroup(allPlayers.filter(p => ['CB', 'LB', 'RB'].includes(p.pos))); // Defenders
+    distributeGroup(allPlayers.filter(p => ['ST', 'LW', 'RW'].includes(p.pos))); // Attackers
+    distributeGroup(allPlayers.filter(p => ['CDM', 'CM', 'CAM'].includes(p.pos))); // Midfielders
+
+    // D. Database Saving Logic (Using new posMap)
+    async function saveTeamToDB(teamArr, tableName) {
+        let counts = {}; // Track usage of positions
+
+        const dbRecords = teamArr.map(p => {
+            // Fallback logic for coordinates
+            let mapKey = p.pos;
+            if (!posMap[mapKey]) mapKey = 'CM'; // Default if unknown
+
+            let coordsObj;
+            if (Array.isArray(posMap[mapKey])) {
+                if (!counts[mapKey]) counts[mapKey] = 0;
+                coordsObj = posMap[mapKey][counts[mapKey] % posMap[mapKey].length];
+                counts[mapKey]++;
+            } else {
+                coordsObj = posMap[mapKey];
+            }
+
+            return {
+                name: p.name,
+                time: Date.now(),
+                position_code: coordsObj.c,
+                position: JSON.stringify({left: coordsObj.x, top: coordsObj.y}),
+                player_pin: null 
+            };
+        });
+
+        if (dbRecords.length > 0) {
+            await supabase.from(tableName).insert(dbRecords);
+        }
+    }
+
+    // E. Execute
+    showToast("💾 Saving Ratings & Balancing Teams...");
+    
+    await supabase.from('blue_team').delete().gt('id', 0);
+    await supabase.from('yellow_team').delete().gt('id', 0);
+
+    await saveTeamToDB(blueTeam, 'blue_team');
+    await saveTeamToDB(yellowTeam, 'yellow_team');
+
+    document.getElementById('settingsModalOverlay').style.display = 'none';
+    loadBlue();
+    loadYellow();
+    
+    setTimeout(() => {
+        alert(`✅ Teams Balanced & Ratings Saved!\n\n🔵 Blue (Power ${blueScore})\n🟡 Yellow (Power ${yellowScore})`);
+    }, 500);
+}
+
+
+// 2. The Core Algorithm: Distribute & Assign Positions
+async function generateBalancedTeams() {
+    const listDiv = document.getElementById('teamMakerList');
+    const inputs = listDiv.querySelectorAll('.tm-player-row');
+    
+    if (inputs.length === 0) return alert("Please load players first.");
+    if (!confirm("⚠️ WARNING:\nThis will DELETE current Blue & Yellow teams and replace them with new balanced ones.\n\nContinue?")) return;
+
+    let allPlayers = [];
+
+    // A. Harvest Data from UI
+    inputs.forEach(row => {
+        const name = row.querySelector('.tm-name').innerText;
+        const idPart = row.querySelector('select').id.split('-')[2]; 
+        const pos = document.getElementById(`tm-pos-${idPart}`).value;
+        const rate = parseInt(document.getElementById(`tm-rate-${idPart}`).value);
+        
+        allPlayers.push({ name, pos, rate });
+    });
+
+    // B. Sort by Rating (Highest to Lowest) to balance power first
+    allPlayers.sort((a, b) => b.rate - a.rate);
+
+    let blueTeam = [];
+    let yellowTeam = [];
+    let blueScore = 0;
+    let yellowScore = 0;
+
+    // Helper: Smart Distribution Function
+    function distributeGroup(group) {
+        // Shuffle players with SAME rating to add randomness
+        group.sort((a, b) => {
+            if (b.rate !== a.rate) return b.rate - a.rate;
+            return 0.5 - Math.random();
+        });
+
+        group.forEach(p => {
+            // Logic: Add to the team with lower Total Score, or alternate if equal
+            // Also check if team is full (max 12)
+            const addToBlue = (blueScore <= yellowScore && blueTeam.length < 12) || yellowTeam.length >= 12;
+            
+            if (addToBlue && blueTeam.length < 12) {
+                blueTeam.push(p);
+                blueScore += p.rate;
+            } else if (yellowTeam.length < 12) {
+                yellowTeam.push(p);
+                yellowScore += p.rate;
+            }
+        });
+    }
+
+    // C. Process by Position (GK first, then others)
+    distributeGroup(allPlayers.filter(p => p.pos === 'GK'));
+    distributeGroup(allPlayers.filter(p => p.pos === 'DEF'));
+    distributeGroup(allPlayers.filter(p => p.pos === 'FWD'));
+    distributeGroup(allPlayers.filter(p => p.pos === 'MID')); // Mids last filler
+
+    // D. Mapping Positions to Coordinates (Auto-Formation)
+    // We use a flexible map. If a team has 3 DEFs, they get defensive spots.
+    const posMap = {
+        'GK':  {c:'GK', x:'6%', y:'50%'},
+        'DEF': [{c:'CB', x:'18%', y:'38%'}, {c:'CB', x:'18%', y:'62%'}, {c:'LB', x:'25%', y:'15%'}, {c:'RB', x:'25%', y:'85%'}],
+        'MID': [{c:'CM', x:'45%', y:'40%'}, {c:'CM', x:'45%', y:'60%'}, {c:'LM', x:'50%', y:'15%'}, {c:'RM', x:'50%', y:'85%'}, {c:'DM', x:'40%', y:'50%'}],
+        'FWD': [{c:'ST', x:'80%', y:'35%'}, {c:'ST', x:'80%', y:'65%'}, {c:'RW', x:'80%', y:'85%'}, {c:'LW', x:'80%', y:'15%'}],
+        'SUB': {c:'SUB', x:'50%', y:'-15%'}
+    };
+
+    async function saveTeamToDB(teamArr, tableName) {
+        // Reset counters for each position type
+        let counts = { DEF: 0, MID: 0, FWD: 0 };
+
+        const dbRecords = teamArr.map(p => {
+            let code = 'SUB';
+            let coords = posMap['SUB'];
+
+            if (p.pos === 'GK') { 
+                code = 'GK'; coords = posMap['GK']; 
+            } else {
+                // Cycle through available slots for that position
+                let list = posMap[p.pos] || posMap['MID']; // Default to MID if error
+                let index = counts[p.pos] % list.length;
+                coords = list[index];
+                code = coords.c;
+                counts[p.pos]++;
+            }
+
+            return {
+                name: p.name,
+                time: Date.now(),
+                position_code: code,
+                position: JSON.stringify({left: coords.left || coords.x, top: coords.top || coords.y}),
+                player_pin: null 
+            };
+        });
+
+        if (dbRecords.length > 0) {
+            await supabase.from(tableName).insert(dbRecords);
+        }
+    }
+
+    // E. Execute Database Operations
+    showToast("⚙️ Balancing Teams... Please wait.");
+    
+    // 1. Clear Old Teams
+    await supabase.from('blue_team').delete().gt('id', 0);
+    await supabase.from('yellow_team').delete().gt('id', 0);
+
+    // 2. Insert New Teams
+    await saveTeamToDB(blueTeam, 'blue_team');
+    await saveTeamToDB(yellowTeam, 'yellow_team');
+
+    // 3. Finish
+    document.getElementById('settingsModalOverlay').style.display = 'none';
+    
+    // Reload UI
+    loadBlue();
+    loadYellow();
+    
+    // Notify User
+    setTimeout(() => {
+        alert(`✅ Teams Created Successfully!\n\n🔵 Blue Power: ${blueScore}\n🟡 Yellow Power: ${yellowScore}\n\nDifference: ${Math.abs(blueScore - yellowScore)}`);
+    }, 500);
+}
+
+(async function init() {
+    const storedUsername = localStorage.getItem('chat_username');
+    if (storedUsername) {
+        document.getElementById('chatNameInput').value = storedUsername;
+        document.getElementById('blueChatNameInput').value = storedUsername;
+        document.getElementById('yellowChatNameInput').value = storedUsername;
+        document.getElementById('nameInput').value = storedUsername;
+    }
+
+    document.getElementById('chatMsgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { sendMessage(); } });
+    document.getElementById('blueChatMsgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { sendTeamMessage('blue'); } });
+    document.getElementById('yellowChatMsgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { sendTeamMessage('yellow'); } });
+
+    await loadSystemConfig(); loadMatchAddress(); loadPlayers(); loadBlue(); loadYellow(); loadChatMessages(); 
+    checkAndRunAutoWash(); 
+    
+    // START TRACKING
+    initUserTracking();
+
+    showSection('main');
+})();
 </script>
 
 <div id="englishNameModal" class="mini-modal-overlay" style="display:none; z-index: 9999; background: rgba(0,0,0,0.96); backdrop-filter: blur(5px);">
