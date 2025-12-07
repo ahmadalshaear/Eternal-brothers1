@@ -759,7 +759,7 @@ function copyToClipboard() {
     
     copyText.select();
     copyText.setSelectionRange(0, 99999); 
-
+    
     navigator.clipboard.writeText(copyText.value).then(() => {
         alert("Address Copied to Clipboard! ✅");
     }).catch(err => {
@@ -946,7 +946,6 @@ async function saveSettings() {
     alert('Settings saved!');
 }
 
-
 async function clearTableData(tableName, confirmMessage, friendlyName) { if (!confirm(confirmMessage)) return; await supabase.from(tableName).delete().gt('id', 0); alert(`${friendlyName} cleared.`); reloadList(tableName); }
 function clearGroupChat() { clearTableData('chat_messages', "Clear Group Chat?", "Group Chat"); }
 function clearSystemHistory() { clearTableData('system_history', "Clear History?", "History"); }
@@ -962,7 +961,6 @@ async function clearLaundryHistory() {
     
     clearTableData('laundry_history', "Are you sure you want to clear Laundry History?", "Laundry History");
 }
-
 
 async function canEditCaptain(table, playerId) {
     if (table !== 'blue_team' && table !== 'yellow_team') return true;
@@ -1062,7 +1060,6 @@ async function addPlayer(){
   document.getElementById("nameInput").value=""; loadPlayers();
 }
 
-
 async function loadPlayers(){
   const { data: team } = await supabase.from("main_team").select("*").order("id");
   const { data: waiting } = await supabase.from("waiting_list").select("*").order("id");
@@ -1071,7 +1068,6 @@ async function loadPlayers(){
 function renderList(id, data, table){
     const ul = document.getElementById(id); ul.innerHTML = "";
     if(data) data.forEach((p,i) => {
-        // إزالة زر الكابتن من القائمة الرئيسية
         const btns = systemConfig.allowPlayerEdit ? `<span><button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button><button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button></span>` : '';
         ul.innerHTML += `<li><div class="player-info"><span>${i+1}. ${p.name} <span class="player-time">${formatPlayerTime(p.time)}</span></span></div>${btns}</li>`;
     });
@@ -1121,56 +1117,114 @@ function reloadList(table){
 
 async function addTeam(team, inputId, providedName){
   if(!systemConfig.allowTeamEdit) return;
+  
   let name = providedName || document.getElementById(inputId).value.trim();
   if(!name) return;
+  
   const table = `${team}_team`;
   const { data: curr } = await supabase.from(table).select("id");
   if(curr.length >= 12) return alert("Team Full");
   
-  // إلغاء كلمة سر الكابتن للاعب الأول
-  let pin = "0000"; // كلمة سر عادية للجميع
+  // تعديل هام: تعيين الرمز 0000 إجبارياً لضمان عدم كون اللاعب كابتن
+  let pin = "0000"; 
   
   const pos = FORMATIONS['4-3-3'][curr.length] || { left: '50%', top: '-15%', code: 'SUB' };
-  await supabase.from(table).insert([{ name, time: Date.now(), position: JSON.stringify({left:pos.left, top:pos.top}), position_code: pos.code, player_pin: pin }]);
+  
+  // الإضافة لقاعدة البيانات
+  await supabase.from(table).insert([{ 
+      name, 
+      time: Date.now(), 
+      position: JSON.stringify({left:pos.left, top:pos.top}), 
+      position_code: pos.code, 
+      player_pin: pin // هنا نضمن أنه ليس كابتن
+  }]);
+  
   if(!providedName) document.getElementById(inputId).value="";
   if(providedName) closeTeamAddModal();
   reloadList(table);
 }
+
 async function addBlue(n){ addTeam('blue', 'blueInput', n); }
 async function addYellow(n){ addTeam('yellow', 'yellowInput', n); }
 
-async function loadTeamData(team){
-  const table = `${team}_team`;
-  const { data } = await supabase.from(table).select("*").order("id");
-  const ul=document.getElementById(`${team}List`);
-  const field=document.getElementById(`${team}Plan`);
-  ul.innerHTML=""; field.innerHTML=`<div class="mid-line"></div><div class="center-circle"></div><div class="penalty-box-left"></div><div class="penalty-box-right"></div>`; 
-  if(data) data.forEach((p,i)=>{
-    // تحديد ما إذا كان هذا اللاعب هو الكابتن الحالي
-    const isCaptain = teamCaptains[team] === p.id;
-    const captainBtn = systemConfig.allowTeamEdit ? `<button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${table}', ${p.id}, '${p.name}', '${team}')" style="background:${isCaptain ? '#4CAF50' : '#616161'}; color:#fff; margin-left:5px;">${isCaptain ? '©★' : '©'}</button>` : '';
-    const btns = systemConfig.allowTeamEdit ? `<span>${captainBtn}<button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button><button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button></span>` : captainBtn;
-    ul.innerHTML += `<li><div class="player-info"><span>${i+1}. ${p.name}</span></div>${btns}</li>`;
-    createPlayerMarker(team, p.name, p.id, JSON.parse(p.position), p.position_code, i + 1);
-  });
-  setupDraggable(team);
+async function loadTeamData(team) {
+    const table = `${team}_team`;
+    const { data } = await supabase.from(table).select("*").order("id");
+    const ul = document.getElementById(`${team}List`);
+    const field = document.getElementById(`${team}Plan`);
+
+    ul.innerHTML = "";
+    field.innerHTML = `<div class="mid-line"></div><div class="center-circle"></div><div class="penalty-box-left"></div><div class="penalty-box-right"></div>`;
+
+    // 1. فحص من هو الكابتن الحالي (من لديه رقم سري ليس 0000)
+    teamCaptains[team] = null; 
+    if (data) {
+        data.forEach(p => {
+            if (p.player_pin && p.player_pin !== "0000") {
+                teamCaptains[team] = p.id;
+            }
+        });
+    }
+
+    const captainExists = teamCaptains[team] !== null; 
+    const isViewerInCaptainMode = localStorage.getItem(`captain_mode_${team}`) === 'true'; 
+
+    if (data) data.forEach((p, i) => {
+        const isThisPlayerCaptain = (teamCaptains[team] === p.id);
+        let btns = '';
+
+        if (systemConfig.allowTeamEdit) {
+            // الحالة 1: لا يوجد كابتن للفريق نهائياً
+            if (!captainExists) {
+                // إظهار زر الكابتن الرمادي (قابل للنقر ليصبح كابتن) + أزرار التعديل والحذف
+                btns = `<span>
+                    <button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${table}', ${p.id}, '${p.name}', '${team}')" style="background:#616161; color:#fff; margin-left:5px;" title="Make Captain">©</button>
+                    <button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button>
+                    <button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button>
+                </span>`;
+            } 
+            // الحالة 2: تم اختيار كابتن بالفعل
+            else {
+                if (isThisPlayerCaptain) {
+                    // هذا هو الكابتن
+                    let actionButtons = '';
+                    if (isViewerInCaptainMode) {
+                        actionButtons = `
+                            <button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button>
+                            <button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button>
+                        `;
+                    }
+                    // زر الكابتن الأخضر يظهر فقط للكابتن المختار
+                    btns = `<span>
+                        <button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${table}', ${p.id}, '${p.name}', '${team}')" style="background:#4CAF50; color:#fff; margin-left:5px; box-shadow: 0 0 5px #fff;" title="Captain (Click to remove)">©★</button>
+                        ${actionButtons}
+                    </span>`;
+                } else {
+                    // لاعبين آخرين (والكابتن موجود)
+                    if (isViewerInCaptainMode) {
+                        // الكابتن يشاهد القائمة: يرى أزرار التعديل والحذف
+                        btns = `<span>
+                            <button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button>
+                            <button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button>
+                        </span>`;
+                    } else {
+                        // شخص عادي يشاهد القائمة: لا يرى أي أزرار لأن الكابتن مسيطر
+                        btns = ``; 
+                    }
+                }
+            }
+        }
+
+        ul.innerHTML += `<li><div class="player-info"><span>${i + 1}. ${p.name}</span></div>${btns}</li>`;
+        createPlayerMarker(team, p.name, p.id, JSON.parse(p.position), p.position_code, i + 1);
+    });
+
+    setupDraggable(team);
 }
+
+
 function loadBlue(){ loadTeamData('blue'); }
 function loadYellow(){ loadTeamData('yellow'); }
-
-// دالة تحديث أزرار الكابتن بناءً على الكابتن الحالي
-function updateCaptainButtons(team) {
-    const list = document.getElementById(`${team}List`);
-    if (!list) return;
-    
-    const captainButtons = list.querySelectorAll('.captain-btn');
-    captainButtons.forEach(btn => {
-        const playerId = parseInt(btn.getAttribute('onclick').match(/\d+/)[0]);
-        const isCaptain = teamCaptains[team] === playerId;
-        btn.style.background = isCaptain ? '#4CAF50' : '#616161';
-        btn.innerHTML = isCaptain ? '©★' : '©';
-    });
-}
 
 async function canControlPlan(team) {
     if (!systemConfig.allowFormationEdit) { 
@@ -1178,25 +1232,23 @@ async function canControlPlan(team) {
         return false; 
     }
     
-    // التحقق من وضع الكابتن
-    const isCaptainMode = localStorage.getItem(`captain_mode_${team}`) === 'true';
+    // Check if captain password is set
     const captainPassword = localStorage.getItem(`captain_password_${team}`);
     
-    if (isCaptainMode && captainPassword) {
-        return true;
-    }
-    
-    // إذا لم يكن في وضع الكابتن، يطلب كلمة السر
-    const enteredPin = prompt(`Enter Captain Password for ${team}:`);
-    if (enteredPin && enteredPin.length >= 4) {
-        localStorage.setItem(`captain_mode_${team}`, 'true');
-        localStorage.setItem(`captain_password_${team}`, enteredPin);
-        showToast(`© Captain mode activated for ${team} team!`);
-        setupDraggable(team);
-        return true; 
-    } else { 
-        alert("Password required to control formation."); 
-        return false; 
+    if (captainPassword) {
+        const enteredPin = prompt(`Enter Captain Password for ${team} team to control formation:`);
+        if (enteredPin === captainPassword) {
+            localStorage.setItem(`captain_mode_${team}`, 'true');
+            showToast(`© Captain mode activated for ${team} team!`);
+            setupDraggable(team);
+            return true;
+        } else {
+            alert("Incorrect password. Only captain can control formation.");
+            return false;
+        }
+    } else {
+        alert("No captain set for this team. Set a captain first.");
+        return false;
     }
 }
 
@@ -1213,15 +1265,17 @@ function setupDraggable(team) {
   interact(`${fieldId} .player-marker`).unset();
   if (!systemConfig.allowFormationEdit) return;
   
-  // التحقق من وضع الكابتن - بدون وضع الكابتن، لا يمكن السحب على الإطلاق
+  // Check captain mode
+  const captainPassword = localStorage.getItem(`captain_password_${team}`);
   const isCaptainMode = localStorage.getItem(`captain_mode_${team}`) === 'true';
-  if (!isCaptainMode) {
-      // إخفاء خاصية السحب تماماً إذا لم يكن في وضع الكابتن
+  
+  if (!captainPassword || !isCaptainMode) {
+      // Disable dragging if not in captain mode
       interact(`${fieldId} .player-marker`).draggable({
           enabled: false
       });
       
-      // تعطيل النقر على الدوائر للتحكم في الوضع
+      // Disable clicking on markers
       document.querySelectorAll(`${fieldId} .player-marker`).forEach(marker => {
           marker.style.cursor = 'not-allowed';
           marker.style.opacity = '0.7';
@@ -1235,16 +1289,14 @@ function setupDraggable(team) {
       return;
   }
   
-  // تفعيل خاصية السحب فقط في وضع الكابتن
+  // Enable dragging only in captain mode
   interact(`${fieldId} .player-marker`).draggable({
       modifiers: [ interact.modifiers.restrictRect({ restriction: field }) ],
       listeners: {
         start: async (event) => {
             const isCaptainMode = localStorage.getItem(`captain_mode_${team}`) === 'true';
             if (!isCaptainMode) {
-                // إذا حاول سحب لاعب بدون وضع الكابتن، يطلب كلمة السر
                 if (await canControlPlan(team)) {
-                    // بعد إدخال كلمة السر، يستمر بالسحب
                     const rect = field.getBoundingClientRect();
                     event.target.dataset.x = (parseFloat(event.target.style.left)/100) * rect.width;
                     event.target.dataset.y = (parseFloat(event.target.style.top)/100) * rect.height;
@@ -1282,7 +1334,7 @@ function setupDraggable(team) {
       }
   });
   
-  // تفعيل النقر على الدوائر للتحكم في الوضع
+  // Enable clicking on markers
   document.querySelectorAll(`${fieldId} .player-marker`).forEach(marker => {
       marker.style.cursor = 'move';
       marker.style.opacity = '1';
@@ -1326,7 +1378,7 @@ function createPlayerMarker(team, name, id, pos, code, num) {
   const numBg = team === 'blue' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.8)';
   m.innerHTML = `<span class="player-position-label">${code || 'SUB'}</span><div class="player-name" style="color:${textColor}; display:flex; align-items:center; gap:3px; justify-content:center;"><span style="background:${numBg}; padding:1px 4px; border-radius:4px; font-size:10px;">${num}</span>${name}</div>`;
   
-  // التحقق من وضع الكابتن قبل السماح بالنقر
+  // Check captain mode before allowing click
   const isCaptainMode = localStorage.getItem(`captain_mode_${team}`) === 'true';
   if (isCaptainMode) {
       m.addEventListener('click', (e) => { 
@@ -1368,7 +1420,7 @@ function showToast(m) { const c=document.getElementById('toastContainer'); const
 async function loadMatchAddress() {
     const { data } = await supabase.from('app_config').select('match_address').eq('id', 1).single(); 
     matchAddress = data ? data.match_address : "Address 📍";
-    document.getElementById('addressBtn').textContent = (matchAddress.length > 20 && !matchAddress.includes("set")) ? "Match Address 📍" : `${matchAddress} 📍`;
+    document.getElementById('addressBtn').textContent = (matchAddress.length > 20 && !matchAddress.includes("set")) ? "Match Address ??" : `${matchAddress} 📍`;
 }
 function playNotificationSound() { 
     const audio = document.getElementById('notification-sound');
@@ -2462,55 +2514,138 @@ function toggleMultiAddMonitor() {
 
 // -------------------- CAPTAIN FOR PLAYER LOGIC --------------------
 async function toggleCaptainForPlayer(table, playerId, playerName, team) {
-    // إذا كان هناك كابتن بالفعل، اطلب كلمة السر لتغييره
-    if (teamCaptains[team]) {
+    // 1. إلغاء الكابتن
+    if (teamCaptains[team] === playerId) {
         const currentPassword = localStorage.getItem(`captain_password_${team}`);
-        const enteredPin = prompt(`Enter Captain Password for ${team} team to change captain:`);
+        const enteredPin = prompt(`Enter Captain Password to REMOVE captaincy from ${playerName}:`);
+
         if (!enteredPin || enteredPin !== currentPassword) {
-            alert("Incorrect password. Only current captain can change captain.");
-            return;
+            return alert("Incorrect password! Cannot remove captaincy.");
         }
+
+        if (confirm(`Are you sure you want to remove captaincy from ${playerName}?`)) {
+            // إعادة الرقم السري لـ 0000 ليصبح لاعباً عادياً
+            await supabase.from(table).update({ player_pin: "0000" }).eq('id', playerId);
+
+            teamCaptains[team] = null;
+            localStorage.removeItem(`captain_mode_${team}`);
+            localStorage.removeItem(`captain_password_${team}`);
+
+            showToast(`Captaincy removed from ${playerName}.`);
+            reloadList(table); // تحديث الواجهة لتظهر الأزرار الرمادية للجميع مرة أخرى
+            
+            await supabase.from('system_history').insert([{
+                content: `${playerName} stepped down as captain of ${team} team`,
+                username: 'System'
+            }]);
+        }
+        return;
     }
-    
-    // طلب كلمة السر من المستخدم
-    const password = prompt(`Enter Captain Password for ${playerName}:`);
-    
+
+    // 2. اختيار كابتن جديد
+    const password = prompt(`Create Captain Password for ${playerName}:`);
+
     if (!password || password.length < 4) {
         alert("Password must be at least 4 characters!");
         return;
     }
+
+    await supabase.from(table).update({ player_pin: password }).eq('id', playerId);
+
+    // تفعيل الكابتن محلياً
+    teamCaptains[team] = playerId;
+    localStorage.setItem(`captain_mode_${team}`, 'true');
+    localStorage.setItem(`captain_password_${team}`, password);
+
+    showToast(`© Captain ${playerName} activated for ${team} team!`);
+    reloadList(table); // تحديث الواجهة لإخفاء الأزرار عن البقية
+
+    await supabase.from('system_history').insert([{
+        content: `${playerName} is now captain of ${team} team`,
+        username: 'System'
+    }]);
+}
+
+// Function to hide all buttons except captain's button
+function hideAllButtonsExceptCaptain(team, captainId) {
+    const list = document.getElementById(`${team}List`);
+    if (!list) return;
     
-    // حفظ كلمة السر في قاعدة البيانات
-    const { error } = await supabase
-        .from(table)
-        .update({ player_pin: password })
-        .eq('id', playerId);
-    
-    if (error) {
-        alert("Error setting captain password!");
-        console.error(error);
-    } else {
-        // تعيين الكابتن الجديد
-        teamCaptains[team] = playerId;
-        
-        // تحديث أزرار الكابتن للجميع
-        updateCaptainButtons(team);
-        
-        // تفعيل وضع الكابتن
-        localStorage.setItem(`captain_mode_${team}`, 'true');
-        localStorage.setItem(`captain_password_${team}`, password);
-        
-        showToast(`© Captain ${playerName} activated for ${team} team!`);
-        
-        // إعادة تحميل وتفعيل خاصية السحب
-        setupDraggable(team);
-        
-        // إرسال رسالة للنظام
-        await supabase.from('system_history').insert([{ 
-            content: `${playerName} is now captain of ${team} team`, 
-            username: 'System' 
-        }]);
+    const listItems = list.querySelectorAll('li');
+    listItems.forEach(item => {
+        const buttonsContainer = item.querySelector('span'); // Container with buttons
+        if (buttonsContainer) {
+            // Extract player ID from onclick attribute or data attribute
+            const playerId = extractPlayerIdFromButtons(buttonsContainer);
+            
+            // Check if this is the captain
+            const isCaptain = (parseInt(playerId) === captainId);
+            
+            if (isCaptain) {
+                // Keep only captain button
+                buttonsContainer.innerHTML = `<button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${team}_team', ${playerId}, '${playerName}', '${team}')" style="background:#4CAF50; color:#fff; margin-left:5px;">©</button>`;
+            } else {
+                // Hide ALL buttons for non-captains
+                buttonsContainer.innerHTML = '';
+            }
+        }
+    });
+}
+
+// Helper function to extract player ID from buttons
+function extractPlayerIdFromButtons(buttonsContainer) {
+    // Look for delete button onclick attribute
+    const deleteBtn = buttonsContainer.querySelector('.delete-btn');
+    if (deleteBtn && deleteBtn.getAttribute('onclick')) {
+        const onclickStr = deleteBtn.getAttribute('onclick');
+        const match = onclickStr.match(/deletePlayer\('[^']+',(\d+)\)/);
+        if (match) return match[1];
     }
+    
+    // Look for edit button onclick attribute
+    const editBtn = buttonsContainer.querySelector('.edit-btn');
+    if (editBtn && editBtn.getAttribute('onclick')) {
+        const onclickStr = editBtn.getAttribute('onclick');
+        const match = onclickStr.match(/editPlayer\('[^']+',(\d+),'[^']+'\)/);
+        if (match) return match[1];
+    }
+    
+    return null;
+}
+
+// Function to move captain to position 1 in database
+async function moveCaptainToPosition1(table, captainId) {
+    // Get all players
+    const { data: allPlayers } = await supabase
+        .from(table)
+        .select('*')
+        .order('id');
+    
+    if (!allPlayers || allPlayers.length === 0) return;
+    
+    // Find captain
+    const captainIndex = allPlayers.findIndex(p => p.id === captainId);
+    if (captainIndex === -1) return;
+    
+    // If captain is not at position 0, reorder
+    if (captainIndex !== 0) {
+        // We can't directly reorder IDs in Supabase, so we'll update the time to force ordering
+        await supabase
+            .from(table)
+            .update({ time: Date.now() - 10000 }) // Set very old time to appear first
+            .eq('id', captainId);
+    }
+}
+
+// Helper function to get player name by ID
+async function getPlayerNameById(table, playerId) {
+    const { data } = await supabase
+        .from(table)
+        .select('name')
+        .eq('id', playerId)
+        .single();
+    
+    return data ? data.name : 'Unknown';
 }
 
 // -------------------- INITIALIZATION --------------------
