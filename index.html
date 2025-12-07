@@ -1154,73 +1154,69 @@ async function loadTeamData(team) {
     const field = document.getElementById(`${team}Plan`);
 
     ul.innerHTML = "";
+    // إعادة رسم الملعب
     field.innerHTML = `<div class="mid-line"></div><div class="center-circle"></div><div class="penalty-box-left"></div><div class="penalty-box-right"></div>`;
 
-    // 1. فحص من هو الكابتن الحالي (من لديه رقم سري ليس 0000)
-    teamCaptains[team] = null; 
+    // 1. تحديد الكابتن الحالي للفريق (من لديه رمز ليس 0000)
+    let currentCaptainId = null;
+    let currentCaptainPin = null;
+
     if (data) {
         data.forEach(p => {
-            if (p.player_pin && p.player_pin !== "0000") {
-                teamCaptains[team] = p.id;
+            if (p.player_pin && p.player_pin !== "0000" && p.player_pin.length === 4) {
+                currentCaptainId = p.id;
+                currentCaptainPin = p.player_pin;
             }
         });
     }
+    
+    // تخزين بيانات الكابتن لاستخدامها في التحقق لاحقاً
+    window[`captainData_${team}`] = { id: currentCaptainId, pin: currentCaptainPin };
 
-    const captainExists = teamCaptains[team] !== null; 
-    const isViewerInCaptainMode = localStorage.getItem(`captain_mode_${team}`) === 'true'; 
+    const isViewerInCaptainMode = localStorage.getItem(`captain_mode_${team}`) === 'true';
 
     if (data) data.forEach((p, i) => {
-        const isThisPlayerCaptain = (teamCaptains[team] === p.id);
         let btns = '';
 
         if (systemConfig.allowTeamEdit) {
-            // الحالة 1: لا يوجد كابتن للفريق نهائياً
-            if (!captainExists) {
-                // إظهار زر الكابتن الرمادي (قابل للنقر ليصبح كابتن) + أزرار التعديل والحذف
+            // الحالة 1: لا يوجد كابتن للفريق نهائياً (إظهار أزرار رمادية للجميع)
+            if (!currentCaptainId) {
                 btns = `<span>
-                    <button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${table}', ${p.id}, '${p.name}', '${team}')" style="background:#616161; color:#fff; margin-left:5px;" title="Make Captain">©</button>
+                    <button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${table}', ${p.id}, '${p.name}', '${team}')" style="background:#616161; color:#fff; margin-left:5px;" title="Set as Captain">©</button>
                     <button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button>
                     <button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button>
                 </span>`;
             } 
-            // الحالة 2: تم اختيار كابتن بالفعل
+            // الحالة 2: يوجد كابتن
             else {
-                if (isThisPlayerCaptain) {
-                    // هذا هو الكابتن
-                    let actionButtons = '';
-                    if (isViewerInCaptainMode) {
-                        actionButtons = `
-                            <button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button>
-                            <button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button>
-                        `;
-                    }
-                    // زر الكابتن الأخضر يظهر فقط للكابتن المختار
+                if (p.id === currentCaptainId) {
+                    // هذا هو الكابتن (زر أخضر)
                     btns = `<span>
-                        <button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${table}', ${p.id}, '${p.name}', '${team}')" style="background:#4CAF50; color:#fff; margin-left:5px; box-shadow: 0 0 5px #fff;" title="Captain (Click to remove)">©★</button>
-                        ${actionButtons}
+                        <button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${table}', ${p.id}, '${p.name}', '${team}')" style="background:#4CAF50; color:#fff; margin-left:5px; box-shadow: 0 0 5px #fff;" title="Captain (Active)">©</button>
+                        ${isViewerInCaptainMode ? `<button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button><button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button>` : ''}
                     </span>`;
                 } else {
-                    // لاعبين آخرين (والكابتن موجود)
+                    // لاعبين آخرين (إخفاء زر الكابتن)
                     if (isViewerInCaptainMode) {
-                        // الكابتن يشاهد القائمة: يرى أزرار التعديل والحذف
                         btns = `<span>
                             <button class="action-btn edit-btn" onclick="editPlayer('${table}',${p.id},'${p.name}')">Edit</button>
                             <button class="action-btn delete-btn" onclick="deletePlayer('${table}',${p.id})">Delete</button>
                         </span>`;
-                    } else {
-                        // شخص عادي يشاهد القائمة: لا يرى أي أزرار لأن الكابتن مسيطر
-                        btns = ``; 
                     }
                 }
             }
         }
 
         ul.innerHTML += `<li><div class="player-info"><span>${i + 1}. ${p.name}</span></div>${btns}</li>`;
+        
+        // رسم اللاعب في الخطة
         createPlayerMarker(team, p.name, p.id, JSON.parse(p.position), p.position_code, i + 1);
     });
 
+    // إعادة تفعيل التفاعل مع الخطة بناءً على التحديثات
     setupDraggable(team);
 }
+
 
 
 function loadBlue(){ loadTeamData('blue'); }
@@ -2514,83 +2510,53 @@ function toggleMultiAddMonitor() {
 
 // -------------------- CAPTAIN FOR PLAYER LOGIC --------------------
 async function toggleCaptainForPlayer(table, playerId, playerName, team) {
-    // 1. إلغاء الكابتن
-    if (teamCaptains[team] === playerId) {
-        const currentPassword = localStorage.getItem(`captain_password_${team}`);
-        const enteredPin = prompt(`Enter Captain Password to REMOVE captaincy from ${playerName}:`);
-
-        if (!enteredPin || enteredPin !== currentPassword) {
-            return alert("Incorrect password! Cannot remove captaincy.");
+    const captainData = window[`captainData_${team}`];
+    
+    // 1. إذا كان هذا اللاعب هو الكابتن بالفعل (إلغاء الكابتن)
+    if (captainData && captainData.id === playerId) {
+        const enteredPin = prompt(`Enter Captain PIN to remove captaincy from ${playerName}:`);
+        
+        // التحقق من الرمز المخزن
+        if (enteredPin !== captainData.pin && enteredPin !== ADMIN_PASSWORD) {
+            return alert("Incorrect PIN! Cannot remove captaincy.");
         }
 
-        if (confirm(`Are you sure you want to remove captaincy from ${playerName}?`)) {
-            // إعادة الرقم السري لـ 0000 ليصبح لاعباً عادياً
+        if (confirm(`Remove captaincy from ${playerName}?`)) {
             await supabase.from(table).update({ player_pin: "0000" }).eq('id', playerId);
-
-            teamCaptains[team] = null;
-            localStorage.removeItem(`captain_mode_${team}`);
-            localStorage.removeItem(`captain_password_${team}`);
-
+            localStorage.removeItem(`captain_mode_${team}`); // تسجيل خروج من وضع الكابتن
             showToast(`Captaincy removed from ${playerName}.`);
-            reloadList(table); // تحديث الواجهة لتظهر الأزرار الرمادية للجميع مرة أخرى
-            
-            await supabase.from('system_history').insert([{
-                content: `${playerName} stepped down as captain of ${team} team`,
-                username: 'System'
-            }]);
+            reloadList(table);
         }
         return;
     }
 
-    // 2. اختيار كابتن جديد
-    const password = prompt(`Create Captain Password for ${playerName}:`);
+    // 2. تعيين كابتن جديد (فقط إذا لم يكن هناك كابتن آخر)
+    if (captainData && captainData.id) {
+        return alert("There is already a captain for this team. Remove them first.");
+    }
 
-    if (!password || password.length < 4) {
-        alert("Password must be at least 4 characters!");
+    const pin = prompt(`Set a 4-digit PIN for Captain ${playerName}:`);
+
+    if (!pin || pin.length !== 4 || isNaN(pin)) {
+        alert("PIN must be exactly 4 digits!");
         return;
     }
 
-    await supabase.from(table).update({ player_pin: password }).eq('id', playerId);
+    // حفظ الكابتن الجديد
+    await supabase.from(table).update({ player_pin: pin }).eq('id', playerId);
 
-    // تفعيل الكابتن محلياً
-    teamCaptains[team] = playerId;
+    // تفعيل وضع الكابتن محلياً فوراً
     localStorage.setItem(`captain_mode_${team}`, 'true');
-    localStorage.setItem(`captain_password_${team}`, password);
-
-    showToast(`© Captain ${playerName} activated for ${team} team!`);
-    reloadList(table); // تحديث الواجهة لإخفاء الأزرار عن البقية
-
+    
+    showToast(`© ${playerName} is now the Captain!`);
+    reloadList(table);
+    
     await supabase.from('system_history').insert([{
         content: `${playerName} is now captain of ${team} team`,
         username: 'System'
     }]);
 }
 
-// Function to hide all buttons except captain's button
-function hideAllButtonsExceptCaptain(team, captainId) {
-    const list = document.getElementById(`${team}List`);
-    if (!list) return;
-    
-    const listItems = list.querySelectorAll('li');
-    listItems.forEach(item => {
-        const buttonsContainer = item.querySelector('span'); // Container with buttons
-        if (buttonsContainer) {
-            // Extract player ID from onclick attribute or data attribute
-            const playerId = extractPlayerIdFromButtons(buttonsContainer);
-            
-            // Check if this is the captain
-            const isCaptain = (parseInt(playerId) === captainId);
-            
-            if (isCaptain) {
-                // Keep only captain button
-                buttonsContainer.innerHTML = `<button class="action-btn captain-btn" onclick="toggleCaptainForPlayer('${team}_team', ${playerId}, '${playerName}', '${team}')" style="background:#4CAF50; color:#fff; margin-left:5px;">©</button>`;
-            } else {
-                // Hide ALL buttons for non-captains
-                buttonsContainer.innerHTML = '';
-            }
-        }
-    });
-}
 
 // Helper function to extract player ID from buttons
 function extractPlayerIdFromButtons(buttonsContainer) {
