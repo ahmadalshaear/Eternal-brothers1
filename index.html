@@ -655,8 +655,12 @@ li { margin:5px 0; padding:6px; border-radius:8px; display:flex; justify-content
 const supabaseUrl = 'https://wihhlvgkjglphjzhivdn.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpaGhsdmdramdscGhqemhpdmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDMwOTYsImV4cCI6MjA3ODUxOTA5Nn0.0uG2yhtSzNiGfn3f1ZjB0p33lMh75Et28aMgMGznWlQ';
 
-// التأكد من استخدام نفس الأسماء عند إنشاء العميل
-window.supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+// التأكد من تهيئة العميل مرة واحدة فقط
+if (!window.supabaseClient) {
+    window.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    window.supabaseClient = true;
+}
+
 
 
 // 2. تعريف دالة أزرار الكابتن
@@ -1137,63 +1141,77 @@ async function refillMainTeam(){
     sendSystemMessageToChat(f.name, `moved to the Main Team`);
   }
 }
-function reloadList(table){
-  if(table.includes("main") || table.includes("waiting")) loadPlayers();
-  else if(table==="blue_team") loadBlue(); else if(table==="yellow_team") loadYellow();
-  else if(table.includes("chat")) { if(table.includes("blue")) loadTeamChatMessages('blue'); else if(table.includes("yellow")) loadTeamChatMessages('yellow'); else loadChatMessages(); }
-  else if(table.includes("system_history")) loadSystemHistory(false);
-  else if(table.includes("laundry_history")) loadLaundryHistory(false);
+function reloadList(table) {
+  if (table.includes("main") || table.includes("waiting")) {
+    loadPlayers();
+  } else if (table === "blue_team") {
+    loadBlue();
+  } else if (table === "yellow_team") {
+    loadYellow();
+  } else if (table.includes("chat")) {
+    if (table.includes("blue")) loadTeamChatMessages('blue');
+    else if (table.includes("yellow")) loadTeamChatMessages('yellow');
+    else loadChatMessages();
+  } else if (table.includes("system_history")) {
+    loadSystemHistory(false);
+  } else if (table.includes("laundry_history")) {
+    loadLaundryHistory(false);
+  }
 }
+async function addTeam(team, inputId, providedName) {
+  if (!systemConfig.allowTeamEdit) return;
 
-async function addTeam(team, inputId, providedName){
-  if(!systemConfig.allowTeamEdit) return;
-  
   let name = providedName || document.getElementById(inputId).value.trim();
-  if(!name) return;
-  
-  const table = `${team}_team`;
-  
-  // 1. التحقق من العدد
-  const { data: curr, error: countError } = await supabase.from(table).select("id");
-  if(countError) {
-      alert("خطأ في قراءة العدد: " + countError.message);
-      return;
-  }
-  
-  if(curr && curr.length >= 12) return alert("Team Full");
-  
-  let pin = "0000"; 
-  const currentCount = curr ? curr.length : 0;
-  const pos = FORMATIONS['4-3-3'][currentCount] || { left: '50%', top: '-15%', code: 'SUB' };
-  
-  // 2. محاولة الإضافة مع التقاط الخطأ
-  const { error: insertError } = await supabase.from(table).insert([{ 
-      name, 
-      time: Date.now(), 
-      position: JSON.stringify({left:pos.left, top:pos.top}), 
-      position_code: pos.code, 
-      player_pin: pin 
-  }]);
+  if (!name) return;
 
-  // 🔴 هام جداً: إذا حدث خطأ سيظهر لك الآن
-  if (insertError) {
-      console.error("Supabase Error:", insertError);
-      alert("فشل الحفظ في قاعدة البيانات!\nالسبب: " + insertError.message + "\nCode: " + insertError.code);
-      return; // توقف ولا تمسح الخانة
+  const table = `${team}_team`;
+
+  try {
+    const { data: curr, error: countError } = await supabase.from(table).select("id");
+    if (countError) throw countError;
+
+    if (curr && curr.length >= 12) {
+      alert("Team is full (Max 12 players)");
+      return;
+    }
+
+    const currentCount = curr ? curr.length : 0;
+    const pos = FORMATIONS['4-3-3'][currentCount] || { left: '50%', top: '-15%', code: 'SUB' };
+
+    // Fixing the insert format with correct Array wrapping []
+    const { error: insertError } = await supabase.from(table).insert([
+      {
+        name: name,
+        time: Date.now(),
+        position: JSON.stringify({ left: pos.left, top: pos.top }),
+        position_code: pos.code,
+        player_pin: "0000"
+      }
+    ]);
+
+    if (insertError) throw insertError;
+
+    if (!providedName) {
+      const inputField = document.getElementById(inputId);
+      if (inputField) inputField.value = "";
+    }
+    if (providedName) closeTeamAddModal();
+
+    reloadList(table);
+    showToast(`Successfully added: ${name}`);
+
+  } catch (err) {
+    console.error("Critical Database Error:", err);
+    alert("Save failed! Please check your internet or Supabase SQL.");
   }
-  
-  // إذا نجحنا
-  if(!providedName) document.getElementById(inputId).value="";
-  if(providedName) closeTeamAddModal();
-  reloadList(table);
 }
 
-
-
-async function addBlue(n){ addTeam('blue', 'blueInput', n); }
-async function addYellow(n){ addTeam('yellow', 'yellowInput', n); }
+async function addBlue(n) { await addTeam('blue', 'blueInput', n); }
+async function addYellow(n) { await addTeam('yellow', 'yellowInput', n); }
 
 async function loadTeamData(team) {
+
+
     const table = `${team}_team`;
     const { data } = await supabase.from(table).select("*").order("id");
     const ul = document.getElementById(`${team}List`);
